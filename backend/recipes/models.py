@@ -1,3 +1,7 @@
 from django.db import models
 
-# Create your models here.
+# from backend.foodgram.constants import (
+
+# )
+from backend.users.models import User
+
