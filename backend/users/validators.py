@@ -8,7 +8,7 @@ def validation_username(value):
 
     if not bool(re.match(r'^[\w.@+-]+\Z', value)):
         raise ValidationError(
-            'Недопустимые символы в никнейме'
+            'Никнейм содержит недопустимые символы.'
         )
     if value.lower() == 'me':
         raise ValidationError(

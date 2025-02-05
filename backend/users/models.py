@@ -6,7 +6,7 @@ from backend.foodgram.constants import (
     MAX_LENGTH_CHARFIELD_NAME,
     MAX_LENGTH_CHARFIELD_PASSWORD
 )
-from users.validators import validation_username
+from backend.users.validators import validation_username
 
 
 class User(AbstractUser):
@@ -49,7 +49,7 @@ class User(AbstractUser):
         upload_to='media/avatars/',
         blank=True,
         null=True,
-        verbose_name='Аватар'
+        verbose_name='Автор'
     )
 
     USERNAME_FIELD = 'email'
@@ -59,7 +59,7 @@ class User(AbstractUser):
         'last_name')
 
     class Meta:
-        ordering = ['id']
+        ordering = ['username']
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
@@ -67,8 +67,8 @@ class User(AbstractUser):
         return self.username
 
 
-class Follow(models.Model):
-    """Модель подписок."""
+class Subscription(models.Model):
+    """Модель подписки."""
 
     user = models.ForeignKey(
         User,
@@ -89,7 +89,7 @@ class Follow(models.Model):
     )
 
     class Meta:
-        ordering = ['id']
+        ordering = ['author']
         constraints = [
             models.UniqueConstraint(
                 fields=('user', 'author'),
@@ -100,8 +100,8 @@ class Follow(models.Model):
                 name='taboo_self_follow'
             )
         ]
-        verbose_name = 'Подписчик'
-        verbose_name_plural = 'Подписчики'
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
 
     def __str__(self):
         return self.user
