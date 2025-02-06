@@ -1,12 +1,12 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from backend.foodgram.constants import (
+from foodgram.constants import (
     MAX_LENGTH_EMAILFIELD,
     MAX_LENGTH_CHARFIELD_NAME,
     MAX_LENGTH_CHARFIELD_PASSWORD
 )
-from backend.users.validators import validation_username
+from users.validators import validation_username
 
 
 class User(AbstractUser):
@@ -96,7 +96,7 @@ class Subscription(models.Model):
                 name='unique_follower'
             ),
             models.CheckConstraint(
-                check=~models.Q(user=models.F('following')),
+                check=~models.Q(user=models.F('user')),
                 name='taboo_self_follow'
             )
         ]

@@ -8,6 +8,7 @@ djoser==2.1.0
 flake8==7.1.1
 flake8-isort==6.1.2
 gunicorn==23.0.0
+pillow==11.1.0
 python-dotenv==1.0.1
 pytz==2024.2
 requests==2.32.3

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from users.models import Follow, User
+from users.models import Subscription, User
 
 
 @admin.register(User)
@@ -17,7 +17,7 @@ class UserAdmin(UserAdmin):
     empty_value_display = '-empty-'
 
 
-@admin.register(Follow)
+@admin.register(Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
     list_display = (
         'id',
