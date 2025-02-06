@@ -12,6 +12,13 @@ from backend.users.validators import validation_username
 class User(AbstractUser):
     """Кастомная модель пользователя."""
 
+    email = models.EmailField(
+        max_length=MAX_LENGTH_EMAILFIELD,
+        blank=False,
+        null=False,
+        unique=True,
+        verbose_name='Электронная почта'
+    )
     username = models.CharField(
         max_length=MAX_LENGTH_CHARFIELD_NAME,
         blank=False,
@@ -19,13 +26,6 @@ class User(AbstractUser):
         unique=True,
         validators=(validation_username,),
         verbose_name='Никнейм'
-    )
-    email = models.EmailField(
-        max_length=MAX_LENGTH_EMAILFIELD,
-        blank=False,
-        null=False,
-        unique=True,
-        verbose_name='Электронная почта'
     )
     first_name = models.CharField(
         max_length=MAX_LENGTH_CHARFIELD_NAME,
