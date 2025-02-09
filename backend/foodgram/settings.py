@@ -62,8 +62,6 @@ DATABASES = {
     }
 }
 
-AUTH_USER_MODEL = 'users.User'
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -90,12 +88,14 @@ USE_L10N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'collected_static')
+STATIC_ROOT = BASE_DIR / 'collected_static'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'users.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
@@ -112,13 +112,13 @@ REST_FRAMEWORK = {
 DJOSER = {
     'LOGIN_FIELD': 'email',
     'HIDE_USERS': False,
-    'PERMISSIONS': {
-        'user': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
-        'user_list': ['rest_framework.permissions.AllowAny'],
-    },
-    'SERIALIZERS': {
-        'user': 'api.serializers.CustomUserSerializer',
-        'current_user': 'api.serializers.CustomUserSerializer',
-        'user_create': 'api.serializers.CustomUserCreateSerializer',
-    }
+    # 'PERMISSIONS': {
+    #     'user': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
+    #     'user_list': ['rest_framework.permissions.AllowAny'],
+    # },
+    # 'SERIALIZERS': {
+    #     'user': 'api.serializers.CustomUserSerializer',
+    #     'current_user': 'api.serializers.CustomUserSerializer',
+    #     'user_create': 'api.serializers.CustomUserCreateSerializer',
+    # }
 }

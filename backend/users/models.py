@@ -6,7 +6,10 @@ from foodgram.constants import (
     MAX_LENGTH_CHARFIELD_NAME,
     MAX_LENGTH_CHARFIELD_PASSWORD
 )
-from users.validators import validation_username
+from users.validators import (
+    validation_password,
+    validation_username
+)
 
 
 class User(AbstractUser):
@@ -43,6 +46,7 @@ class User(AbstractUser):
         max_length=MAX_LENGTH_CHARFIELD_PASSWORD,
         blank=False,
         null=False,
+        validators=(validation_password,),
         verbose_name='Пароль'
     )
     avatar = models.ImageField(
@@ -73,8 +77,6 @@ class Subscription(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        blank=True,
-        null=True,
         related_name='follower',
         verbose_name='Подписчик'
     )
@@ -82,8 +84,6 @@ class Subscription(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        blank=True,
-        null=True,
         related_name='following',
         verbose_name='Автор'
     )
@@ -96,7 +96,7 @@ class Subscription(models.Model):
                 name='unique_follower'
             ),
             models.CheckConstraint(
-                check=~models.Q(user=models.F('user')),
+                check=~models.Q(user=models.F('author')),
                 name='taboo_self_follow'
             )
         ]
@@ -104,4 +104,4 @@ class Subscription(models.Model):
         verbose_name_plural = 'Подписки'
 
     def __str__(self):
-        return self.user
+        return f'{self.user} подписан на {self.author}'

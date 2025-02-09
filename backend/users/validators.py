@@ -3,6 +3,15 @@ import re
 from django.core.exceptions import ValidationError
 
 
+def validation_password(value):
+    """Проверяет валидность минимальной длины пароля."""
+
+    if len(value) < 8:
+        raise ValidationError(
+            'Пароль должен содержать минимум 8 символов.'
+        )
+
+
 def validation_username(value):
     """Проверяет валидность никнейма."""
 
