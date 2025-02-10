@@ -114,10 +114,12 @@ DJOSER = {
     'HIDE_USERS': False,
     'SERIALIZERS': {
         'user_create': 'api.serializers.CustomUserCreateSerializer',
-        'user': 'api.serializers.CustomUserGetSerializer'
+        'user': 'api.serializers.CustomUserSerializer',
+        'current_user': 'api.users.serializers.CustomUserSerializer',
     },
     'PERMISSIONS': {
         'user': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
         'user_list': ['rest_framework.permissions.AllowAny'],
+        'me': ['djoser.permissions.CurrentUserOrAdmin',],
     }
 }

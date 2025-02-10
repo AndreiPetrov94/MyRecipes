@@ -1,9 +1,11 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
-from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 
+from api.utils import (
+    Base64ImageField,
+)
 # from recipes.models import (
 #     Tag,
 #     Recipe,
@@ -29,7 +31,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         write_only=True
     )
 
-    class Meta(UserCreateSerializer.Meta):
+    class Meta:
         model = User
         fields = (
             'id',
@@ -41,17 +43,10 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         )
 
 
-class CustomUserGetSerializer(UserSerializer):
+class CustomUserSerializer(UserSerializer):
     """Сериализатор получения пользователя."""
 
-    avatar = Base64ImageField(allow_null=True, required=False)
     is_subscribed = serializers.SerializerMethodField()
-
-    def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            return obj.follower.filter(user=request.user).exists()
-        return False
 
     class Meta:
         model = User
@@ -65,11 +60,18 @@ class CustomUserGetSerializer(UserSerializer):
             'is_subscribed'
         )
 
+    def get_is_subscribed(self, obj):
+        """Проверяет подписку текущего пользователя."""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.follower.filter(user=request.user).exists()
+        return False
 
-class AvatarUpdateSerializer(serializers.ModelSerializer):
+
+class AvatarSerializer(serializers.ModelSerializer):
     """Сериализатор для обновления аватара пользователя."""
 
-    avatar = Base64ImageField()
+    avatar = Base64ImageField(required=True)
 
     class Meta:
         model = User
