@@ -2,17 +2,17 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from foodgram.constants import (
-    MAX_LENGTH_TAG_NAME,
-    MAX_LENGTH_TAG_SLUG,
     MAX_LENGTH_INGREDIENT_NAME,
     MAX_LENGTH_MEASUREMENT_UNIT,
+    MAX_LENGTH_TAG_NAME,
+    MAX_LENGTH_TAG_SLUG,
     MAX_LENGTH_RECIPE_NAME,
     MAX_VALUE_COOKING_TIME,
     MIN_VALUE_COOKING_TIME,
     MIN_VALUE_INGREDIENT_AMOUNT
 )
 from recipes.validators import validation_slug
-from users.models import User
+from users.models import CustomUser
 
 
 class Tag(models.Model):
@@ -104,7 +104,7 @@ class Recipe(models.Model):
         help_text='Время приготовления в минутах'
     )
     author = models.ForeignKey(
-        User,
+        CustomUser,
         on_delete=models.CASCADE,
         related_name='recipes',
         verbose_name='Автор рецепта',
@@ -112,7 +112,6 @@ class Recipe(models.Model):
     )
     tags = models.ManyToManyField(
         Tag,
-        through='RecipeTags',
         related_name='recipes',
         verbose_name='Тег рецепта',
         help_text='Тег рецепта'
@@ -140,7 +139,7 @@ class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='ingredient_list',
+        related_name='ingredient_recipe',
         verbose_name='Рецепт'
     )
     ingredient = models.ForeignKey(
@@ -174,44 +173,19 @@ class RecipeIngredient(models.Model):
         return f'{self.recipe.name} - {self.ingredient.name}'
 
 
-class RecipeTags(models.Model):
-    """Модель тегов в рецепте."""
-
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        related_name='tag_list',
-        verbose_name='Рецепт'
-    )
-    tag = models.ForeignKey(
-        Tag,
-        on_delete=models.CASCADE,
-        related_name='tag_recipe',
-        verbose_name='Тег'
-    )
-
-    class Meta:
-        ordering = ['-id']
-        verbose_name = 'Тег рецепта'
-        verbose_name_plural = 'Теги рецепта'
-
-    def __str__(self):
-        return f'{self.recipe.name} - {self.tag.name}'
-
-
 class Favorite(models.Model):
     """Модель добавления рецептов в избранное."""
 
     user = models.ForeignKey(
-        User,
+        CustomUser,
         on_delete=models.CASCADE,
-        related_name='favorite',
+        related_name='favorites',
         verbose_name='Пользователь',
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='favorite',
+        related_name='favorites',
         verbose_name='Рецепт',
     )
 
@@ -234,15 +208,15 @@ class ShoppingList(models.Model):
     """Модель списка покупок."""
 
     user = models.ForeignKey(
-        User,
+        CustomUser,
         on_delete=models.CASCADE,
-        related_name='shopping_list',
+        related_name='shopping_lists',
         verbose_name='Пользователь',
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='shopping_list',
+        related_name='shopping_lists',
         verbose_name='Рецепт',
     )
 
