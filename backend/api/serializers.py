@@ -1,4 +1,4 @@
-from django.contrib.auth import get_user_model
+# from django.contrib.auth import get_user_model
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 # from rest_framework.exceptions import ValidationError
@@ -16,12 +16,12 @@ from recipes.models import (
     ShoppingList
 )
 from users.models import (
-    # CustomUser,
+    User,
     Subscription
 )
 
 
-User = get_user_model()
+# User = get_user_model()
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -64,7 +64,7 @@ class CustomUserSerializer(UserSerializer):
         """Проверяет подписку текущего пользователя."""
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return obj.follower.filter(user=request.user).exists()
+            return obj.following.filter(user=request.user).exists()
         return False
 
 

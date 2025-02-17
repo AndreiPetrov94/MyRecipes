@@ -12,7 +12,7 @@ from users.validators import (
 )
 
 
-class CustomUser(AbstractUser):
+class User(AbstractUser):
     """Кастомная модель пользователя."""
 
     email = models.EmailField(
@@ -75,14 +75,14 @@ class Subscription(models.Model):
     """Модель подписки."""
 
     user = models.ForeignKey(
-        CustomUser,
+        User,
         on_delete=models.CASCADE,
         related_name='follower',
         verbose_name='Подписчик'
     )
 
     author = models.ForeignKey(
-        CustomUser,
+        User,
         on_delete=models.CASCADE,
         related_name='following',
         verbose_name='Автор'

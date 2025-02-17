@@ -12,7 +12,7 @@ from foodgram.constants import (
     MIN_VALUE_INGREDIENT_AMOUNT
 )
 from recipes.validators import validation_slug
-from users.models import CustomUser
+from users.models import User
 
 
 class Tag(models.Model):
@@ -104,7 +104,7 @@ class Recipe(models.Model):
         help_text='Время приготовления в минутах'
     )
     author = models.ForeignKey(
-        CustomUser,
+        User,
         on_delete=models.CASCADE,
         related_name='recipes',
         verbose_name='Автор рецепта',
@@ -177,7 +177,7 @@ class Favorite(models.Model):
     """Модель добавления рецептов в избранное."""
 
     user = models.ForeignKey(
-        CustomUser,
+        User,
         on_delete=models.CASCADE,
         related_name='favorites',
         verbose_name='Пользователь',
@@ -208,7 +208,7 @@ class ShoppingList(models.Model):
     """Модель списка покупок."""
 
     user = models.ForeignKey(
-        CustomUser,
+        User,
         on_delete=models.CASCADE,
         related_name='shopping_lists',
         verbose_name='Пользователь',
