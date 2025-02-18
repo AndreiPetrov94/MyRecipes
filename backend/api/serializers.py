@@ -81,35 +81,41 @@ class AvatarSerializer(serializers.ModelSerializer):
         )
 
 
-class UserSubscribeSerializer(serializers.ModelSerializer):
-    """Сериализатор подписки."""
+class SubscribeSerializer(serializers.ModelSerializer):
+    """Сериализатор добавления|удаления подписки."""
 
     class Meta:
-        model = Subscribe
-        fields = "__all__"
+        model = Subscription
+        fields = (
+            'user',
+            'author'
+        )
         validators = [
             UniqueTogetherValidator(
-                queryset=Subscribe.objects.all(),
-                fields=("user", "author"),
-                message=ERROR_MESSAGES["duplicate_subscription"],
+                queryset=Subscription.objects.all(),
+                fields=('user', 'author'),
+                message='БУ! Испугался? Друг ты уже подписан на этого автора.'
             )
         ]
 
-    def validate(self, data):
-        request = self.context.get("request")
-        if request.user == data["author"]:
-            raise ValidationError(ERROR_MESSAGES["self_subscribe"])
-        return data
+    def validate_author(self, value):
+        """Проверяет валидность подписки на себя."""
+        if self.context['request'].user == value:
+            raise serializers.ValidationError(
+                'БУ! Испугался? Друг нельзя оформить подписку на себя'
+            )
+        return value
 
     def to_representation(self, instance):
-        request = self.context.get("request")
-        return UserSubscribeRepresentSerializer(
-            instance.author, context={"request": request}
+        """Преобразует объект подписки в удобный для вывода формат."""
+        request = self.context.get('request')
+        return SubscriberDetailSerializer(
+            instance.author, context={'request': request}
         ).data
 
 
-class UserSubscribeRepresentSerializer(UserGetSerializer):
-    """Сериализатор получения информации о подписке."""
+class SubscriberDetailSerializer(CustomUserSerializer):
+    """Сериализатор списка подписок."""
 
     is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
@@ -118,55 +124,45 @@ class UserSubscribeRepresentSerializer(UserGetSerializer):
     class Meta:
         model = User
         fields = (
-            "email",
-            "id",
-            "username",
-            "first_name",
-            "last_name",
-            "is_subscribed",
-            "recipes",
-            "recipes_count",
-            "avatar",
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'recipes',
+            'recipes_count',
+            'avatar'
         )
         read_only_fields = (
-            "email",
-            "username",
-            "first_name",
-            "last_name",
-            "is_subscribed",
-            "recipes",
-            "recipes_count",
-            "avatar",
+            'email',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'recipes',
+            'recipes_count',
+            'avatar'
         )
 
     def get_recipes(self, obj):
-        request = self.context.get("request")
+        """Возвращает список рецептов."""
+        request = self.context.get('request')
         recipes_limit = None
         if request:
-            recipes_limit = request.query_params.get("recipes_limit")
+            recipes_limit = request.query_params.get('recipes_limit')
         recipes = obj.recipes.all()
         if recipes_limit:
             recipes = obj.recipes.all()[: int(recipes_limit)]
         return RecipeShortSerializer(
-            recipes, many=True, context={"request": request}
+            recipes,
+            many=True,
+            context={'request': request}
         ).data
 
     def get_recipes_count(self, obj):
+        """Возвращает общее количество рецептов."""
         return obj.recipes.count()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 class TagSerializer(serializers.ModelSerializer):
