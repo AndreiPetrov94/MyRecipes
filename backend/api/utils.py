@@ -16,5 +16,17 @@ class Base64ImageField(ImageField):
                     base64.b64decode(img_str), name=f'image.{ext}'
                 )
             except (ValueError, base64.binascii.Error):
-                raise ValidationError('Invalid base64 image data.')
+                raise ValidationError(
+                    'Неверные данные изображения в формате Base64.'
+                )
         return super().to_internal_value(data)
+
+
+def check_user_status(request, obj, model):
+    """Проверка рецепта."""
+
+    return (
+        request
+        and request.user.is_authenticated
+        and model.objects.filter(user=request.user, recipe=obj).exists()
+    )
