@@ -3,6 +3,10 @@ import base64
 from django.core.files.base import ContentFile
 from rest_framework.serializers import ImageField, ValidationError
 
+from .serializers import (
+    Ingredient
+)
+
 
 class Base64ImageField(ImageField):
     """Поле для декодировки изображений в формате Base64."""
@@ -30,3 +34,38 @@ def check_user_status(request, obj, model):
         and request.user.is_authenticated
         and model.objects.filter(user=request.user, recipe=obj).exists()
     )
+
+
+def validate_unique_ingredients(value):
+    """Проверяет наличие и уникальность игредиента."""
+    if not value:
+        raise ValidationError(
+            'БУ! Испугался? Друг необходимо добавить ингредиенты.'
+        )
+    ingredients_list = []
+    for item in value:
+        try:
+            ingredient = Ingredient.objects.get(id=item['id'])
+        except Ingredient.DoesNotExist:
+            raise ValidationError(
+                'БУ! Испугался? Друг данного ингредиента нет в базе данных'
+            )
+        if ingredient in ingredients_list:
+            raise ValidationError(
+                'БУ! Испугался? Друг ингредиенты должны быть уникальны.'
+            )
+        ingredients_list.append(ingredient)
+    return value
+
+
+def validate_unique_items(value, item_name):
+    """Проверяет наличие и уникальность значения."""
+    if not value:
+        raise ValidationError(
+            f'БУ! Испугался? Друг необходимо добавить {item_name}.'
+        )
+    if len(value) != len(set(value)):
+        raise ValidationError(
+            f'БУ! Испугался? Друг {item_name} должны быть уникальны.'
+        )
+    return value

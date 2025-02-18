@@ -1,4 +1,3 @@
-# from django.contrib.auth import get_user_model
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -6,7 +5,9 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from api.utils import (
     Base64ImageField,
-    check_user_status
+    check_user_status,
+    validate_unique_ingredients,
+    validate_unique_items
 )
 from recipes.models import (
     Tag,
@@ -295,87 +296,120 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
 
     def validate_tags(self, value):
         """Проверяет валидность тега."""
-        if not value:
-            raise serializers.ValidationError(
-                'БУ! Испугался? Друг необходимо добавить тег.'
-            )
-        if len(value) != len(set(value)):
-            raise serializers.ValidationError(
-                'БУ! Испугался? Друг теги должны быть уникальны.'
-            )
-        return value
+        # if not value:
+        #     raise serializers.ValidationError(
+        #         'БУ! Испугался? Друг необходимо добавить тег.'
+        #     )
+        # if len(value) != len(set(value)):
+        #     raise serializers.ValidationError(
+        #         'БУ! Испугался? Друг теги должны быть уникальны.'
+        #     )
+        return validate_unique_items(value, 'теги')
 
     def validate_ingredients(self, value):
         """Проверяет валидность ингредиента."""
-        if not value:
-            raise serializers.ValidationError(
-                'БУ! Испугался? Друг необходимо добавить ингредиенты.'
-            )
-        ingredients_list = []
-        for item in value:
-            try:
-                ingredient = Ingredient.objects.get(id=item['id'])
-            except Ingredient.DoesNotExist:
-                raise ValidationError(
-                    'БУ! Испугался? Друг данного ингредиента нет в базе данных'
-                )
-            if ingredient in ingredients_list:
-                raise ValidationError(
-                    'БУ! Испугался? Друг ингредиенты должны быть уникальны.'
-                )
-            ingredients_list.append(ingredient)
-        return value
+        # if not value:
+        #     raise serializers.ValidationError(
+        #         'БУ! Испугался? Друг необходимо добавить ингредиенты.'
+        #     )
+        # ingredients_list = []
+        # for item in value:
+        #     try:
+        #         ingredient = Ingredient.objects.get(id=item['id'])
+        #     except Ingredient.DoesNotExist:
+        #         raise ValidationError(
+        #             'БУ! Испугался? Друг данного ингредиента нет в базе данных'
+        #         )
+        #     if ingredient in ingredients_list:
+        #         raise ValidationError(
+        #             'БУ! Испугался? Друг ингредиенты должны быть уникальны.'
+        #         )
+        #     ingredients_list.append(ingredient)
+        # return value
+        return validate_unique_ingredients(value)
 
     def create(self, validated_data):
         """Создание рецепта."""
-        request = self.context.get('request')
-        ingredients_data = validated_data.pop('recipe_ingredients')
-        tags = validated_data.pop('tags')
-        recipe = Recipe.objects.create(author=request.user, **validated_data)
+        # request = self.context.get('request')
+        # ingredients_data = validated_data.pop('recipe_ingredients')
+        # tags = validated_data.pop('tags')
+        # recipe = Recipe.objects.create(author=request.user, **validated_data)
+        # recipe.tags.set(tags)
+        # recipe_ingredients = [
+        #     RecipeIngredient(
+        #         recipe=recipe,
+        #         ingredient_id=item['id'],
+        #         amount=item['amount']
+        #     )
+        #     for item in ingredients_data
+        # ]
+        # RecipeIngredient.objects.bulk_create(recipe_ingredients)
+        # return recipe
+
+        ingredients = validated_data.pop('recipe_ingredients', [])
+        tags = validated_data.pop('tags', [])
+        recipe = Recipe.objects.create(
+            author=self.context['request'].user,
+            **validated_data
+        )
         recipe.tags.set(tags)
-        recipe_ingredients = [
-            RecipeIngredient(
-                recipe=recipe,
-                ingredient_id=item['id'],
-                amount=item['amount']
-            )
-            for item in ingredients_data
-        ]
-        RecipeIngredient.objects.bulk_create(recipe_ingredients)
+        RecipeIngredient.objects.bulk_create(
+            [
+                RecipeIngredient(recipe=recipe, ingredient_id=item['id'], amount=item['amount'])
+                for item in ingredients
+            ]
+        )
         return recipe
 
     def update(self, instance, validated_data):
         """Обновление рецепта."""
-        ingredients = validated_data.pop('recipe_ingredients')
-        tags = validated_data.pop('tags')
-        instance.tags.clear()
+        # ingredients = validated_data.pop('recipe_ingredients')
+        # tags = validated_data.pop('tags')
+        # instance.tags.clear()
+        # instance.tags.set(tags)
+        # RecipeIngredient.objects.filter(recipe=instance).delete()
+        # super().update(instance, validated_data)
+
+        # recipe_ingredients = []
+        # existing_ingredients = {
+        #     ri.ingredient.id: ri
+        #     for ri in RecipeIngredient.objects.filter(recipe=instance)
+        # }
+        # for item in ingredients:
+        #     ingredient_id = item['id']
+        #     amount = item['amount']
+
+        #     if ingredient_id in existing_ingredients:
+        #         existing_ingredients[ingredient_id].amount = amount
+        #         existing_ingredients[ingredient_id].save()
+        #     else:
+        #         recipe_ingredients.append(
+        #             RecipeIngredient(
+        #                 recipe=instance,
+        #                 ingredient_id=ingredient_id,
+        #                 amount=amount,
+        #             )
+        #         )
+        # if recipe_ingredients:
+        #     RecipeIngredient.objects.bulk_create(recipe_ingredients)
+        # instance.save()
+        # return instance
+
+        ingredients = validated_data.pop('recipe_ingredients', [])
+        tags = validated_data.pop('tags', [])
         instance.tags.set(tags)
         RecipeIngredient.objects.filter(recipe=instance).delete()
-        super().update(instance, validated_data)
-
-        recipe_ingredients = []
-        existing_ingredients = {
-            ri.ingredient.id: ri
-            for ri in RecipeIngredient.objects.filter(recipe=instance)
-        }
-        for item in ingredients:
-            ingredient_id = item['id']
-            amount = item['amount']
-
-            if ingredient_id in existing_ingredients:
-                existing_ingredients[ingredient_id].amount = amount
-                existing_ingredients[ingredient_id].save()
-            else:
-                recipe_ingredients.append(
-                    RecipeIngredient(
-                        recipe=instance,
-                        ingredient_id=ingredient_id,
-                        amount=amount,
-                    )
+        RecipeIngredient.objects.bulk_create(
+            [
+                RecipeIngredient(
+                    recipe=instance,
+                    ingredient_id=item['id'],
+                    amount=item['amount']
                 )
-        if recipe_ingredients:
-            RecipeIngredient.objects.bulk_create(recipe_ingredients)
-        instance.save()
+                for item in ingredients
+            ]
+        )
+        super().update(instance, validated_data)
         return instance
 
     def to_representation(self, instance):
@@ -396,57 +430,90 @@ class RecipeShortSerializer(serializers.ModelSerializer):
         )
 
 
-class FavoriteRecipeSerializer(serializers.ModelSerializer):
+class AbstractAuthorRecipeSerializer(serializers.ModelSerializer):
+    """Абстрактный сериализатор автора и рецепта."""
+
+    _added_to: str = ''
+
+    class Meta:
+        abstract = True
+        fields = ('author', 'recipe')
+        read_only_fields = ('author',)
+
+    def validate(self, attrs):
+        recipe = attrs['recipe']
+        user = self.context['request'].user
+        if self.Meta.model.objects.filter(author=user, recipe=recipe).exists():
+            raise serializers.ValidationError(
+                f'БУ! Испугался? Рецепт добавлен в {self._added_to}.'
+            )
+        return attrs
+
+    def to_representation(self, instance):
+        """Преобразует рецепт в удобный для вывода формат."""
+        return RecipeShortSerializer(
+            instance.recipe, context=self.context
+        ).data
+
+
+class FavoriteRecipeSerializer(AbstractAuthorRecipeSerializer):
     """Сериализатор избранных рецептов."""
 
-    class Meta:
+    _added_to = 'избранное'
+
+    class Meta(AbstractAuthorRecipeSerializer.Meta):
         model = Favorite
-        fields = (
-            'id',
-            'user'
-            'name',
-            'image',
-            'cooking_time'
-        )
-        validators = [
-            UniqueTogetherValidator(
-                queryset=model.objects.all(),
-                fields=('user', 'recipe'),
-                message='БУ! Испугался? Друг рецепт уже находится в избранном.'
-            )
-        ]
-
-    def to_representation(self, instance):
-        """Преобразует рецепт в удобный для вывода формат."""
-        request = self.context.get('request')
-        return RecipeShortSerializer(
-            instance.recipe, context={'request': request}
-        ).data
 
 
-class ShoppingListSerializer(serializers.ModelSerializer):
+class ShoppingListSerializer(AbstractAuthorRecipeSerializer):
     """Сериализатор списка покупок."""
 
-    class Meta:
-        model = ShoppingList
-        fields = (
-            'id',
-            'user'
-            'name',
-            'image',
-            'cooking_time'
-        )
-        validators = [
-            UniqueTogetherValidator(
-                queryset=model.objects.all(),
-                fields=('user', 'recipe'),
-                message='БУ! Испугался? Друг рецепт добавлен в список покупок.'
-            )
-        ]
+    _added_to = 'список покупок'
 
-    def to_representation(self, instance):
-        """Преобразует рецепт в удобный для вывода формат."""
-        request = self.context.get('request')
-        return RecipeShortSerializer(
-            instance.recipe, context={'request': request}
-        ).data
+    class Meta(AbstractAuthorRecipeSerializer.Meta):
+        model = ShoppingList
+
+
+
+# class FavoriteRecipeSerializer(serializers.ModelSerializer):
+#     """Сериализатор избранных рецептов."""
+
+#     class Meta:
+#         model = Favorite
+#         fields = "__all__"
+#         validators = [
+#             UniqueTogetherValidator(
+#                 queryset=model.objects.all(),
+#                 fields=('user', 'recipe'),
+#                 message='БУ! Испугался? Друг рецепт уже находится в избранном.'
+#             )
+#         ]
+
+#     def to_representation(self, instance):
+#         """Преобразует рецепт в удобный для вывода формат."""
+#         request = self.context.get('request')
+#         return RecipeShortSerializer(
+#             instance.recipe, context={'request': request}
+#         ).data
+
+
+# class ShoppingListSerializer(serializers.ModelSerializer):
+#     """Сериализатор списка покупок."""
+
+#     class Meta:
+#         model = ShoppingList
+#         fields = "__all__"
+#         validators = [
+#             UniqueTogetherValidator(
+#                 queryset=model.objects.all(),
+#                 fields=('user', 'recipe'),
+#                 message='БУ! Испугался? Друг рецепт добавлен в список покупок.'
+#             )
+#         ]
+
+#     def to_representation(self, instance):
+#         """Преобразует рецепт в удобный для вывода формат."""
+#         request = self.context.get('request')
+#         return RecipeShortSerializer(
+#             instance.recipe, context={'request': request}
+#         ).data
