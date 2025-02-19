@@ -81,7 +81,7 @@ class AvatarSerializer(serializers.ModelSerializer):
         )
 
 
-class SubscribeSerializer(serializers.ModelSerializer):
+class SubscriptionSerializer(serializers.ModelSerializer):
     """Сериализатор добавления|удаления подписки."""
 
     class Meta:
@@ -109,12 +109,12 @@ class SubscribeSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         """Преобразует объект подписки в удобный для вывода формат."""
         request = self.context.get('request')
-        return SubscriberDetailSerializer(
+        return SubscriptionDetailSerializer(
             instance.author, context={'request': request}
         ).data
 
 
-class SubscriberDetailSerializer(CustomUserSerializer):
+class SubscriptionDetailSerializer(CustomUserSerializer):
     """Сериализатор списка подписок."""
 
     is_subscribed = serializers.SerializerMethodField()

@@ -1,9 +1,13 @@
 import base64
 
+from django.http import HttpResponse
+from django.db.models import Sum
 from django.core.files.base import ContentFile
 from rest_framework.serializers import ImageField, ValidationError
+from rest_framework.response import Response
+from rest_framework import status
 
-from recipes.models import Ingredient
+from recipes.models import Ingredient, RecipeIngredient
 
 
 class Base64ImageField(ImageField):
@@ -66,3 +70,31 @@ def validate_unique_items(value, item_name):
             f'БУ! Испугался? Друг {item_name} должны быть уникальны.'
         )
     return value
+
+
+def get_shopping_cart(request):
+    """Получить файл со списком покупок."""
+    user = request.user
+    if not user.carts.exists():
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    ingredients = (
+        RecipeIngredient.objects.filter(recipe__shopping_lists__user=request.user)
+        .values(
+            "ingredient__name",
+            "ingredient__measurement_unit",
+        )
+        .annotate(ingredient_amount=Sum("amount"))
+    )
+    shopping_list = f"Список покупок пользователя {user}:\n"
+
+    for ingredient in ingredients:
+        name = ingredient["ingredient__name"]
+        unit = ingredient["ingredient__measurement_unit"]
+        amount = ingredient["ingredient_amount"]
+        shopping_list += f"\n{name} - {amount}/{unit}"
+
+    file_name = f"{user}_shopping_cart.txt"
+    response = HttpResponse(shopping_list, content_type="text/plain")
+    response["Content-Disposition"] = f"attachment; filename={file_name}"
+    return response
