@@ -3,7 +3,7 @@ import re
 from django.core.exceptions import ValidationError
 
 
-def validation_password(value):
+def validation_password_length(value):
     """Проверяет валидность минимальной длины пароля."""
 
     if len(value) < 8:

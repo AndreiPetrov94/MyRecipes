@@ -3,9 +3,7 @@ import base64
 from django.core.files.base import ContentFile
 from rest_framework.serializers import ImageField, ValidationError
 
-from .serializers import (
-    Ingredient
-)
+from recipes.models import Ingredient
 
 
 class Base64ImageField(ImageField):
@@ -28,7 +26,6 @@ class Base64ImageField(ImageField):
 
 def check_user_status(request, obj, model):
     """Проверка рецепта."""
-
     return (
         request
         and request.user.is_authenticated

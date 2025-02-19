@@ -7,7 +7,7 @@ from foodgram.constants import (
     MAX_LENGTH_CHARFIELD_PASSWORD
 )
 from users.validators import (
-    validation_password,
+    validation_password_length,
     validation_username
 )
 
@@ -46,7 +46,7 @@ class User(AbstractUser):
         max_length=MAX_LENGTH_CHARFIELD_PASSWORD,
         blank=False,
         null=False,
-        validators=(validation_password,),
+        validators=(validation_password_length,),
         verbose_name='Пароль'
     )
     avatar = models.ImageField(

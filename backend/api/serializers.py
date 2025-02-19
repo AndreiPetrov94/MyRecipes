@@ -1,6 +1,6 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
+# from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 
 from api.utils import (
@@ -17,16 +17,15 @@ from recipes.models import (
     Favorite,
     ShoppingList
 )
-from users.models import (
-    User,
-    Subscription
-)
+from users.models import User, Subscription
+from users.validators import validation_password_length
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
     """Сериализатор создания пользователя."""
 
     password = serializers.CharField(
+        validators=(validation_password_length,),
         write_only=True
     )
 

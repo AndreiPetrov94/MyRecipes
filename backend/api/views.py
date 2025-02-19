@@ -1,71 +1,84 @@
-# # from django_filters.rest_framework import DjangoFilterBackend
-# from rest_framework import generics, viewsets, status
-# # from rest_framework.generics import get_object_or_404
-# from rest_framework.permissions import (
-#     IsAuthenticated,
-#     AllowAny
-# )
-# from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
+from django.urls import reverse
+from django.shortcuts import redirect
+from djoser.views import UserViewSet
+from rest_framework import status, mixins, viewsets
+from rest_framework.decorators import action
+from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.exceptions import ValidationError
 
-# # from api.filters import IngredientFilter, RecipeFilter
-# # from api.permissions import IsAdminAuthorOrReadOnly
-# # from recipes.models import (
-# #     Tag,
-# #     Recipe,
-# #     Ingredient,
-# #     RecipeIngredient,
-# #     Favorite,
-# #     ShoppingList
-# # )
-# # from users.models import (
-# #     User,
-# #     Subscription
-# # )
-# from .serializers import (
-#     CustomUserSerializer,
-#     AvatarSerializer
-# )
+# from api.filters import IngredientFilter, RecipeFilter
+# from api.permissions import IsAdminAuthorOrReadOnly
+from api.serializers import (
+    CustomUserCreateSerializer,
+    CustomUserSerializer,
+    AvatarSerializer,
+    SubscribeSerializer,
+    SubscriberDetailSerializer,
+    TagSerializer,
+    IngredientSerializer,
+    RecipeIngredientSerializer,
+    RecipeGetSerializer,
+    IngredientPostSerializer,
+    RecipeCreateUpdateSerializer,
+    RecipeShortSerializer,
+    FavoriteRecipeSerializer,
+    ShoppingListSerializer
+)
+
+from recipes.models import (
+    Tag,
+    Recipe,
+    Ingredient,
+    RecipeIngredient,
+    Favorite,
+    ShoppingList
+)
 
 
-# # class UserView(generics.RetrieveAPIView):
-# #     """Получение и обновление информации о текущем пользователе."""
+class CustomUserViewSet(UserViewSet):
+    """Вьюсет для работы с пользователями и подписками."""
 
-# #     serializer_class = CustomUserSerializer
-# #     permission_classes = [IsAuthenticated]
+    @action(
+        detail=False, methods=['GET'], permission_classes=[IsAuthenticated]
+    )
+    def me(self, request):
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
 
-# #     def get_object(self):
-# #         return self.request.user
 
 
-# class AvatarUpdateView(generics.UpdateAPIView, generics.DestroyAPIView):
-#     """Обновление аватара текущего пользователя."""
 
-#     http_method_names = ['put', 'delete']
-#     serializer_class = AvatarSerializer
-#     permission_classes = [IsAuthenticated]
+    @action(detail=False, methods=['put', 'delete'], permission_classes=[
+        IsAuthenticated], url_path='me/avatar')
+    def avatar(self, request):
+        """Управление аватаром пользователя."""
+        user = request.user
 
-#     def update(self, request):
+        if request.method == 'DELETE':
+            if user.avatar:
+                user.avatar.delete()
+                user.avatar = None
+                user.save()
+                return Response(
+                    {'avatar': None},
+                    status=status.HTTP_204_NO_CONTENT)
+            raise ValidationError({'error': 'Аватар отсутствует'})
 
-#         user = request.user
-#         serializer = self.get_serializer(
-#             user,
-#             data=request.data
-#         )
+        if "avatar" not in request.data:
+            return Response(
+                {"error": "Поле 'avatar' обязательно."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-#         if serializer.is_valid():
-#             user.avatar.delete()
-#             serializer.save()
-#             return Response(serializer.data)
+        serializer = AvatarSerializer(user, data=request.data, partial=True)
 
-#         return Response(
-#             serializer.errors,
-#             status=status.HTTP_400_BAD_REQUEST
-#         )
+        if not serializer.is_valid():
+            raise ValidationError(serializer.errors)
 
-#     def destroy(self, request):
-
-#         user = request.user
-#         user.avatar.delete()
-#         user.avatar = None
-#         user.save()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
