@@ -2,13 +2,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.urls import reverse
 from django.shortcuts import redirect
 from djoser.views import UserViewSet
-from rest_framework import status, mixins, viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
 from rest_framework.exceptions import ValidationError
 from django.views.decorators.http import require_GET
 
@@ -16,18 +14,13 @@ from api.filters import IngredientFilter, RecipeFilter
 from api.pagination import CustomPagination
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (
-    CustomUserCreateSerializer,
     CustomUserSerializer,
     AvatarSerializer,
     SubscriptionSerializer,
-    SubscriptionDetailSerializer,
     TagSerializer,
     IngredientSerializer,
-    RecipeIngredientSerializer,
     RecipeGetSerializer,
-    IngredientPostSerializer,
     RecipeCreateUpdateSerializer,
-    RecipeShortSerializer,
     FavoriteRecipeSerializer,
     ShoppingListSerializer
 )
@@ -36,7 +29,6 @@ from recipes.models import (
     Tag,
     Recipe,
     Ingredient,
-    RecipeIngredient,
     Favorite,
     ShoppingList
 )
@@ -49,6 +41,7 @@ class CustomUserViewSet(UserViewSet):
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
+    pagination_class = CustomPagination
 
     @action(
         detail=False,
