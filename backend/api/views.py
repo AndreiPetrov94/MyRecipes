@@ -11,7 +11,8 @@ from rest_framework.exceptions import ValidationError
 from django.views.decorators.http import require_GET
 
 from api.filters import IngredientFilter, RecipeFilter
-from api.pagination import CustomPagination
+# from api.pagination import CustomPagination
+# from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (
     CustomUserSerializer,
@@ -41,37 +42,81 @@ class CustomUserViewSet(UserViewSet):
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
-    pagination_class = CustomPagination
+    # pagination_class = PageNumberPagination
+    # pagination_class = LimitOffsetPagination
+    # pagination_class = CustomPagination
+
+    # @action(
+    #     detail=False,
+    #     methods=['GET'],
+    #     permission_classes=(IsAuthenticated,)
+    # )
+    # def me(self, request, *args, **kwargs):
+    #     self.get_object = self.get_instance
+    #     return self.retrieve(request, *args, **kwargs)
+
+    # @action(
+    #     detail=False,
+    #     methods=['PUT'],
+    #     permission_classes=(IsAuthorOrReadOnly,),
+    #     url_path='me/avatar',
+    # )
+    # def avatar(self, request, *args, **kwargs):
+    #     serializer = AvatarSerializer(
+    #         instance=request.user,
+    #         data=request.data,
+    #     )
+    #     serializer.is_valid(raise_exception=True)
+    #     serializer.save()
+    #     return Response(serializer.data)
+
+    # @avatar.mapping.delete
+    # def delete_avatar(self, request, *args, **kwargs):
+    #     user = self.request.user
+    #     user.avatar.delete()
+    #     return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
-        detail=False,
-        methods=['GET'],
-        permission_classes=(IsAuthenticated,)
+        detail=False, methods=["GET"], permission_classes=[IsAuthenticated]
     )
-    def me(self, request, *args, **kwargs):
-        self.get_object = self.get_instance
-        return self.retrieve(request, *args, **kwargs)
-
-    @action(
-        detail=False,
-        methods=['PUT'],
-        permission_classes=(IsAuthorOrReadOnly,),
-        url_path='me/avatar',
-    )
-    def avatar(self, request, *args, **kwargs):
-        serializer = AvatarSerializer(
-            instance=request.user,
-            data=request.data,
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+    def me(self, request):
+        serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
-    @avatar.mapping.delete
-    def delete_avatar(self, request, *args, **kwargs):
-        user = self.request.user
-        user.avatar.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    @action(detail=False, methods=['put', 'delete'], permission_classes=[
+        IsAuthenticated], url_path='me/avatar')
+    def avatar(self, request):
+        """Управление аватаром пользователя."""
+        user = request.user
+
+        if request.method == 'DELETE':
+            if user.avatar:
+                user.avatar.delete()
+                user.avatar = None
+                user.save()
+                return Response(
+                    {'avatar': None},
+                    status=status.HTTP_204_NO_CONTENT)
+            raise ValidationError({'error': 'Аватар отсутствует'})
+
+        if "avatar" not in request.data:
+            return Response(
+                {"error": "Поле 'avatar' обязательно."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = AvatarSerializer(user, data=request.data, partial=True)
+
+        if not serializer.is_valid():
+            raise ValidationError(serializer.errors)
+
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+
+
 
     @action(
         detail=True,
@@ -138,7 +183,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     queryset = Recipe.objects.all()
     permission_classes = (IsAuthorOrReadOnly,)
-    pagination_class = CustomPagination
+    # pagination_class = CustomPagination
+    # pagination_class = PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 

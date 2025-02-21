@@ -68,16 +68,11 @@ class CustomUserSerializer(UserSerializer):
 class AvatarSerializer(serializers.ModelSerializer):
     """Сериализатор для обновления аватара пользователя."""
 
-    avatar = Base64ImageField(
-        allow_null=False,
-        required=True
-    )
+    avatar = Base64ImageField(required=True, allow_null=False)
 
     class Meta:
         model = User
-        fields = (
-            'avatar',
-        )
+        fields = ('avatar',)
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):

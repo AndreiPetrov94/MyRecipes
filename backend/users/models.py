@@ -51,6 +51,7 @@ class User(AbstractUser):
     )
     avatar = models.ImageField(
         upload_to='media/avatars/',
+        default=None,
         blank=True,
         null=True,
         verbose_name='Автор'
