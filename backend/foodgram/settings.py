@@ -123,5 +123,5 @@ DJOSER = {
         'user': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
         'user_list': ['rest_framework.permissions.AllowAny'],
         # 'me': ['djoser.permissions.CurrentUserOrAdmin'],
-    }
+    },
 }
