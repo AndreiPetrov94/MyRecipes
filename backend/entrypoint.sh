@@ -1,3 +1,3 @@
-python manage.py makemigrations --no-input
-python manage.py migrate --no-input
+python manage.py makemigrations
+python manage.py migrate
 gunicorn --bild 0.0.0.0:8000 foodgram.wsgi
