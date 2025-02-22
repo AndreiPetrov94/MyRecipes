@@ -23,8 +23,8 @@ class RecipeFilter(FilterSet):
     is_favorited = filters.BooleanFilter(
         method='filter_is_favorited'
     )
-    is_in_shopping_list = filters.BooleanFilter(
-        method='filter_is_in_shopping_list'
+    is_in_shopping_cart = filters.BooleanFilter(
+        method='filter_is_in_shopping_cart'
     )
 
     class Meta:
@@ -33,7 +33,7 @@ class RecipeFilter(FilterSet):
             'author',
             'tags',
             'is_favorited',
-            'is_in_shopping_list'
+            'is_in_shopping_cart'
         )
 
     def get_is_favorited(self, queryset, filter_name, filter_value):
@@ -41,7 +41,7 @@ class RecipeFilter(FilterSet):
             return queryset.filter(favorites__user=self.request.user)
         return queryset
 
-    def get_is_in_shopping_list(self, queryset, filter_name, filter_value):
+    def get_is_in_shopping_cart(self, queryset, filter_name, filter_value):
         if filter_value:
-            return queryset.filter(shopping_list__user=self.request.user)
+            return queryset.filter(shopping_cart__user=self.request.user)
         return queryset

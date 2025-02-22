@@ -14,7 +14,7 @@ from recipes.models import (
     Ingredient,
     RecipeIngredient,
     Favorite,
-    ShoppingList
+    ShoppingCart
 )
 from users.models import User, Subscription
 from users.validators import validation_password_length
@@ -60,15 +60,15 @@ class CustomUserSerializer(UserSerializer):
     def get_is_subscribed(self, obj):
         """Проверяет подписку текущего пользователя."""
         request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            return obj.following.filter(user=request.user).exists()
-        return False
+        if request is None or request.user.is_anonymous:
+            return False
+        return request.user.follower.filter(author=obj).exists()
 
 
 class AvatarSerializer(serializers.ModelSerializer):
     """Сериализатор для обновления аватара пользователя."""
 
-    avatar = Base64ImageField(required=True, allow_null=False)
+    avatar = Base64ImageField(allow_null=False)
 
     class Meta:
         model = User
@@ -238,6 +238,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
             'is_favorited',
             'is_in_shopping_cart'
         )
+        extra_fields = ("is_favorited", "is_in_shopping_cart")
 
     def get_is_favorited(self, obj):
         """Проверяет наличие рецепта в избранном."""
@@ -247,7 +248,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     def get_is_in_shopping_cart(self, obj):
         """Проверяет наличие рецепта в списке покупок."""
         request = self.context.get('request')
-        return check_user_status(request, obj, ShoppingList)
+        return check_user_status(request, obj, ShoppingCart)
 
 
 class IngredientPostSerializer(serializers.ModelSerializer):
@@ -458,13 +459,13 @@ class FavoriteRecipeSerializer(AbstractAuthorRecipeSerializer):
         model = Favorite
 
 
-class ShoppingListSerializer(AbstractAuthorRecipeSerializer):
+class ShoppingCartSerializer(AbstractAuthorRecipeSerializer):
     """Сериализатор списка покупок."""
 
     _added_to = 'список покупок'
 
     class Meta(AbstractAuthorRecipeSerializer.Meta):
-        model = ShoppingList
+        model = ShoppingCart
 
 
 
@@ -490,11 +491,11 @@ class ShoppingListSerializer(AbstractAuthorRecipeSerializer):
 #         ).data
 
 
-# class ShoppingListSerializer(serializers.ModelSerializer):
+# class ShoppingCartSerializer(serializers.ModelSerializer):
 #     """Сериализатор списка покупок."""
 
 #     class Meta:
-#         model = ShoppingList
+#         model = ShoppingCart
 #         fields = "__all__"
 #         validators = [
 #             UniqueTogetherValidator(

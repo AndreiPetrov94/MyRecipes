@@ -79,22 +79,22 @@ def get_shopping_cart(request):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     ingredients = (
-        RecipeIngredient.objects.filter(recipe__shopping_lists__user=request.user)
+        RecipeIngredient.objects.filter(recipe__shopping_carts__user=request.user)
         .values(
             "ingredient__name",
             "ingredient__measurement_unit",
         )
         .annotate(ingredient_amount=Sum("amount"))
     )
-    shopping_list = f"Список покупок пользователя {user}:\n"
+    shopping_cart = f"Список покупок пользователя {user}:\n"
 
     for ingredient in ingredients:
         name = ingredient["ingredient__name"]
         unit = ingredient["ingredient__measurement_unit"]
         amount = ingredient["ingredient_amount"]
-        shopping_list += f"\n{name} - {amount}/{unit}"
+        shopping_cart += f"\n{name} - {amount}/{unit}"
 
     file_name = f"{user}_shopping_cart.txt"
-    response = HttpResponse(shopping_list, content_type="text/plain")
+    response = HttpResponse(shopping_cart, content_type="text/plain")
     response["Content-Disposition"] = f"attachment; filename={file_name}"
     return response

@@ -23,7 +23,7 @@ from api.serializers import (
     RecipeGetSerializer,
     RecipeCreateUpdateSerializer,
     FavoriteRecipeSerializer,
-    ShoppingListSerializer
+    ShoppingCartSerializer
 )
 from api.utils import get_shopping_cart
 from recipes.models import (
@@ -31,7 +31,7 @@ from recipes.models import (
     Recipe,
     Ingredient,
     Favorite,
-    ShoppingList
+    ShoppingCart
 )
 from users.models import User, Subscription
 
@@ -59,7 +59,7 @@ class CustomUserViewSet(UserViewSet):
     @action(
         detail=False,
         methods=['PUT'],
-        permission_classes=(IsAuthorOrReadOnly,),
+        permission_classes=(IsAuthenticated,),
         url_path='me/avatar',
     )
     def avatar(self, request, *args, **kwargs):
@@ -210,8 +210,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def shopping_cart(self, request, pk=None):
         return self.check_recipe_action(
             request,
-            ShoppingList,
-            ShoppingListSerializer
+            ShoppingCart,
+            ShoppingCartSerializer
         )
 
     @action(
