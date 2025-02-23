@@ -152,6 +152,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeGetSerializer
         return RecipeCreateUpdateSerializer
 
+    def create(self, request, *args, **kwargs):
+        # Проверяем, авторизован ли пользователь
+        if not request.user.is_authenticated:
+            return Response(
+                {'detail': 'Аутентификация требуется.'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        return super().create(request, *args, **kwargs)
+
     @action(
         detail=True,
         methods=['GET'],
