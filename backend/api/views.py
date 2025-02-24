@@ -12,7 +12,7 @@ from django.views.decorators.http import require_GET
 
 from api.filters import IngredientFilter, RecipeFilter
 # from api.pagination import CustomPagination
-# from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
+from rest_framework.pagination import LimitOffsetPagination
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (
     CustomUserSerializer,
@@ -45,7 +45,7 @@ class CustomUserViewSet(UserViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
     # pagination_class = PageNumberPagination
-    # pagination_class = LimitOffsetPagination
+    pagination_class = LimitOffsetPagination
     # pagination_class = CustomPagination
 
     @action(
