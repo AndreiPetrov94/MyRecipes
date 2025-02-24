@@ -18,6 +18,7 @@ from api.serializers import (
     CustomUserSerializer,
     AvatarSerializer,
     SubscriptionSerializer,
+    SubscriptionDetailSerializer,
     TagSerializer,
     IngredientSerializer,
     RecipeGetSerializer,
@@ -76,6 +77,24 @@ class CustomUserViewSet(UserViewSet):
         user = self.request.user
         user.avatar.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        detail=False,
+        methods=('GET',),
+        permission_classes=(IsAuthenticated,),
+        url_path='subscriptions',
+        url_name='subscriptions',
+    )
+    def subscriptions(self, request):
+        user = request.user
+        queryset = user.follower.all()
+        pages = self.paginate_queryset(queryset)
+        serializer = SubscriptionDetailSerializer(
+            pages,
+            many=True,
+            context={'request': request}
+        )
+        return self.get_paginated_response(serializer.data)
 
     @action(
         detail=True,
