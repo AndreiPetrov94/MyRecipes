@@ -4,9 +4,12 @@ from recipes.models import Ingredient, Recipe, Tag
 
 
 class IngredientFilter(FilterSet):
+    """Фильтр для ингредиентов."""
     name = filters.CharFilter(
         field_name='name',
-        lookup_expr='istartswith')
+        lookup_expr='istartswith',
+        label='Название ингредиента'
+    )
 
     class Meta:
         model = Ingredient
@@ -14,11 +17,12 @@ class IngredientFilter(FilterSet):
 
 
 class RecipeFilter(FilterSet):
+    """Фильтр для рецептов."""
     tags = filters.ModelMultipleChoiceFilter(
         queryset=Tag.objects.all(),
         field_name='tags__slug',
         to_field_name='slug',
-        label='Tags'
+        label='Теги рецепта'
     )
     is_favorited = filters.BooleanFilter(
         method='filter_is_favorited'
@@ -36,24 +40,14 @@ class RecipeFilter(FilterSet):
             'is_in_shopping_cart'
         )
 
-    # def filter_is_favorited(self, queryset, filter_name, filter_value):
-    #     if filter_value:
-    #         return queryset.filter(favorites__user=self.request.user)
-    #     return queryset
-
-    # def filter_is_in_shopping_cart(self, queryset, filter_name, filter_value):
-    #     if filter_value:
-    #         return queryset.filter(shopping_cart__user=self.request.user)
-    #     return queryset
-
     def filter_is_favorited(self, queryset, name, value):
         """Фильтрует рецепты, добавленные в избранное."""
-        if value and self.request.user.is_authenticated:
-            return queryset.filter(favorites__user=self.request.user)
-        return queryset
+        if not value or not self.request.user.is_authenticated:
+            return queryset
+        return queryset.filter(favorites__user=self.request.user)
 
     def filter_is_in_shopping_cart(self, queryset, name, value):
         """Фильтрует рецепты, добавленные в список покупок."""
-        if value and self.request.user.is_authenticated:
-            return queryset.filter(shopping_carts__user=self.request.user)
-        return queryset
+        if not value or not self.request.user.is_authenticated:
+            return queryset
+        return queryset.filter(shopping_carts__user=self.request.user)

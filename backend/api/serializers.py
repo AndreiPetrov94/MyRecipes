@@ -2,27 +2,21 @@ from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from api.utils import (
-    Base64ImageField,
-    check_user_status,
-    validate_unique_ingredients,
-    validate_unique_items
-)
+from api.utils import Base64ImageField, check_user_status
 from recipes.models import (
-    Tag,
-    Recipe,
-    Ingredient,
-    RecipeIngredient,
     Favorite,
-    ShoppingCart
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    ShoppingCart,
+    Tag
 )
-from users.models import User, Subscription
-from users.validators import validation_password_length
+from users.models import Subscription, User
+from users.validators import validation_password_length, validation_username
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
     """Сериализатор создания пользователя."""
-
     password = serializers.CharField(
         validators=(validation_password_length,),
         write_only=True
@@ -39,10 +33,12 @@ class CustomUserCreateSerializer(UserCreateSerializer):
             'password'
         )
 
+    def validation_username(self, value):
+        return validation_username(value)
+
 
 class CustomUserSerializer(UserSerializer):
-    """Сериализатор получения пользователя."""
-
+    """Сериализатор для получения данных о пользователе."""
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
@@ -67,7 +63,6 @@ class CustomUserSerializer(UserSerializer):
 
 class AvatarSerializer(serializers.ModelSerializer):
     """Сериализатор для обновления аватара пользователя."""
-
     avatar = Base64ImageField(allow_null=False)
 
     class Meta:
@@ -76,7 +71,7 @@ class AvatarSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
-    """Сериализатор добавления|удаления подписки."""
+    """Сериализатор добавления/удаления подписки."""
 
     class Meta:
         model = Subscription
@@ -88,7 +83,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             UniqueTogetherValidator(
                 queryset=Subscription.objects.all(),
                 fields=('user', 'author'),
-                message='БУ! Испугался? Друг ты уже подписан на этого автора.'
+                message='Вы уже подписан на этого автора.'
             )
         ]
 
@@ -96,22 +91,21 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         """Проверяет валидность подписки на себя."""
         if self.context['request'].user == value:
             raise serializers.ValidationError(
-                'БУ! Испугался? Друг нельзя оформить подписку на себя'
+                'Нельзя оформить подписку на себя.'
             )
         return value
 
     def to_representation(self, instance):
-        """Преобразует объект подписки в удобный для вывода формат."""
-        request = self.context.get('request')
+        """Возвращает детальную информацию о подписке."""
         return SubscriptionDetailSerializer(
-            instance.author, context={'request': request}
+            instance.author,
+            context=self.context
         ).data
 
 
 class SubscriptionDetailSerializer(CustomUserSerializer):
-    """Сериализатор списка подписок."""
-
-    is_subscribed = serializers.SerializerMethodField()
+    """Сериализатор для списка подписок."""
+    # is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
@@ -140,7 +134,7 @@ class SubscriptionDetailSerializer(CustomUserSerializer):
         )
 
     def get_recipes(self, obj):
-        """Возвращает список рецептов."""
+        """Возвращает список рецептов автора."""
         request = self.context.get('request')
         recipes_limit = None
         if request:
@@ -155,7 +149,7 @@ class SubscriptionDetailSerializer(CustomUserSerializer):
         ).data
 
     def get_recipes_count(self, obj):
-        """Возвращает общее количество рецептов."""
+        """Возвращает общее количество рецептов автора."""
         return obj.recipes.count()
 
 
@@ -261,7 +255,6 @@ class IngredientPostSerializer(serializers.ModelSerializer):
     """Сериализатор добавления ингредиентов в рецепт."""
 
     id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
-    # id = serializers.IntegerField()
 
     class Meta:
         model = RecipeIngredient
@@ -415,12 +408,6 @@ class AbstractAuthorRecipeSerializer(serializers.ModelSerializer):
             )
         return attrs
 
-    # def to_representation(self, instance):
-    #     """Преобразует рецепт в удобный для вывода формат."""
-    #     return RecipeShortSerializer(
-    #         instance.recipe, context=self.context
-    #     ).data
-    
     def to_representation(self, instance):
         """Преобразует рецепт в удобный для вывода формат."""
         # Проверяем тип объекта
@@ -448,48 +435,3 @@ class ShoppingCartSerializer(AbstractAuthorRecipeSerializer):
 
     class Meta(AbstractAuthorRecipeSerializer.Meta):
         model = ShoppingCart
-
-
-
-# class FavoriteRecipeSerializer(serializers.ModelSerializer):
-#     """Сериализатор избранных рецептов."""
-
-#     class Meta:
-#         model = Favorite
-#         fields = "__all__"
-#         validators = [
-#             UniqueTogetherValidator(
-#                 queryset=model.objects.all(),
-#                 fields=('user', 'recipe'),
-#                 message='БУ! Испугался? Друг рецепт уже находится в избранном.'
-#             )
-#         ]
-
-#     def to_representation(self, instance):
-#         """Преобразует рецепт в удобный для вывода формат."""
-#         request = self.context.get('request')
-#         return RecipeShortSerializer(
-#             instance.recipe, context={'request': request}
-#         ).data
-
-
-# class ShoppingCartSerializer(serializers.ModelSerializer):
-#     """Сериализатор списка покупок."""
-
-#     class Meta:
-#         model = ShoppingCart
-#         fields = "__all__"
-#         validators = [
-#             UniqueTogetherValidator(
-#                 queryset=model.objects.all(),
-#                 fields=('user', 'recipe'),
-#                 message='БУ! Испугался? Друг рецепт добавлен в список покупок.'
-#             )
-#         ]
-
-#     def to_representation(self, instance):
-#         """Преобразует рецепт в удобный для вывода формат."""
-#         request = self.context.get('request')
-#         return RecipeShortSerializer(
-#             instance.recipe, context={'request': request}
-#         ).data
