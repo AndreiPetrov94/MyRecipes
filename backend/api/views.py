@@ -83,11 +83,13 @@ class CustomUserViewSet(UserViewSet):
         methods=('GET',),
         permission_classes=(IsAuthenticated,),
         url_path='subscriptions',
-        url_name='subscriptions',
+        url_name='subscriptions'
     )
     def subscriptions(self, request):
         user = request.user
-        queryset = user.follower.all()
+        print(user)
+        queryset = User.objects.filter(following__user=user)
+        print(queryset)
         pages = self.paginate_queryset(queryset)
         serializer = SubscriptionDetailSerializer(
             pages,
@@ -201,22 +203,50 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def check_recipe_action(self, request, model, serializer_class):
         recipe = self.get_object()
         user = request.user
-        if request.method == 'POST':
-            obj, created = model.objects.get_or_create(
-                user=user,
-                recipe=recipe
-            )
-            data = serializer_class(recipe, context={'request': request}).data
-            return Response(data, status=status.HTTP_201_CREATED)
 
-        obj = model.objects.filter(user=user, recipe=recipe).first()
-        if not obj:
+        # if request.method == 'POST':
+        #     obj, created = model.objects.get_or_create(
+        #         user=user,
+        #         recipe=recipe
+        #     )
+        #     data = serializer_class(recipe, context={'request': request}).data
+        #     return Response(data, status=status.HTTP_201_CREATED)
+
+        # obj = model.objects.filter(user=user, recipe=recipe).first()
+
+        if request.method == 'POST':
+            # Проверяем, существует ли уже запись
+            if model.objects.filter(user=user, recipe=recipe).exists():
+                return Response(
+                    {'detail': f'Рецепт уже добавлен в {model.__name__.lower()}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            # Создаем новую запись
+            obj = model.objects.create(user=user, recipe=recipe)
             return Response(
-                {'detail': 'Рецепт не найден.'},
-                status=status.HTTP_400_BAD_REQUEST
+                serializer_class(recipe, context={'request': request}).data,
+                status=status.HTTP_201_CREATED
             )
-        obj.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+
+        # if not obj:
+        #     return Response(
+        #         {'detail': 'Рецепт не найден.'},
+        #         status=status.HTTP_400_BAD_REQUEST
+        #     )
+        # obj.delete()
+        # return Response(status=status.HTTP_204_NO_CONTENT)
+
+        elif request.method == 'DELETE':
+            # Удаляем запись, если она существует
+            obj = model.objects.filter(user=user, recipe=recipe).first()
+            if not obj:
+                return Response(
+                    {'detail': f'Рецепт не найден в {model.__name__.lower()}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            obj.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
 
     @action(
         detail=True,

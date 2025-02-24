@@ -415,11 +415,21 @@ class AbstractAuthorRecipeSerializer(serializers.ModelSerializer):
             )
         return attrs
 
+    # def to_representation(self, instance):
+    #     """Преобразует рецепт в удобный для вывода формат."""
+    #     return RecipeShortSerializer(
+    #         instance.recipe, context=self.context
+    #     ).data
+    
     def to_representation(self, instance):
         """Преобразует рецепт в удобный для вывода формат."""
-        return RecipeShortSerializer(
-            instance.recipe, context=self.context
-        ).data
+        # Проверяем тип объекта
+        if isinstance(instance, Recipe):
+            # Если это сам рецепт, используем его напрямую
+            return RecipeShortSerializer(instance, context=self.context).data
+        else:
+            # Если это объект Favorite или ShoppingCart, берем поле recipe
+            return RecipeShortSerializer(instance.recipe, context=self.context).data
 
 
 class FavoriteRecipeSerializer(AbstractAuthorRecipeSerializer):

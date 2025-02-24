@@ -75,7 +75,7 @@ def validate_unique_items(value, item_name):
 def get_shopping_cart(request):
     """Получить файл со списком покупок."""
     user = request.user
-    if not user.carts.exists():
+    if not user.shopping_carts.exists():
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     ingredients = (

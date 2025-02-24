@@ -36,12 +36,24 @@ class RecipeFilter(FilterSet):
             'is_in_shopping_cart'
         )
 
-    def get_is_favorited(self, queryset, filter_name, filter_value):
-        if filter_value:
+    # def filter_is_favorited(self, queryset, filter_name, filter_value):
+    #     if filter_value:
+    #         return queryset.filter(favorites__user=self.request.user)
+    #     return queryset
+
+    # def filter_is_in_shopping_cart(self, queryset, filter_name, filter_value):
+    #     if filter_value:
+    #         return queryset.filter(shopping_cart__user=self.request.user)
+    #     return queryset
+
+    def filter_is_favorited(self, queryset, name, value):
+        """Фильтрует рецепты, добавленные в избранное."""
+        if value and self.request.user.is_authenticated:
             return queryset.filter(favorites__user=self.request.user)
         return queryset
 
-    def get_is_in_shopping_cart(self, queryset, filter_name, filter_value):
-        if filter_value:
-            return queryset.filter(shopping_cart__user=self.request.user)
+    def filter_is_in_shopping_cart(self, queryset, name, value):
+        """Фильтрует рецепты, добавленные в список покупок."""
+        if value and self.request.user.is_authenticated:
+            return queryset.filter(shopping_carts__user=self.request.user)
         return queryset
