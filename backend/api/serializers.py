@@ -295,13 +295,28 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
             'cooking_time',
         )
 
-    def validate(self, value):
+    def validate(self, data):
+        # Проверяем, что поле 'ingredients' присутствует в запросе
+        if 'recipe_ingredients' not in data:
+            raise serializers.ValidationError(
+                {'ingredients': 'Это поле обязательно.'}
+            )
+
+        # Проверяем, что поле 'tags' присутствует в запросе
+        if 'tags' not in data:
+            raise serializers.ValidationError(
+                {'tags': 'Это поле обязательно.'}
+            )
+
+        # Проверяем уникальность названия рецепта при создании
         if self.context['request'].method == 'POST':
-            name = value['name']
-            if (name == value):
+            name = data.get('name')
+            if Recipe.objects.filter(name=name).exists():
                 raise serializers.ValidationError(
-                    'Такой рецепт уже есть!')
-        return value
+                    {'name': 'Такой рецепт уже существует!'}
+                )
+
+        return data
 
     def validate_tags(self, value):
         """Проверяет валидность тега."""
