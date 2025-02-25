@@ -6,9 +6,11 @@ from users.models import Subscription, User
 
 @admin.register(User)
 class UserAdmin(UserAdmin):
+    """Управление пользователями."""
+
     list_display = (
-        'username',
         'id',
+        'username',
         'email',
         'first_name',
         'last_name',
@@ -18,21 +20,22 @@ class UserAdmin(UserAdmin):
         'username',
         'first_name'
     )
+    list_display_links = ('username',)
     search_fields = ('email', 'username')
     empty_value_display = '-empty-'
 
 
 @admin.register(Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
+    """Управление подписками."""
+
     list_display = (
         'id',
         'user',
         'author'
     )
     search_fields = (
-        'user__email',
-        'user__username',
-        'author__email'
-        'author__username',
+        'user',
+        'author'
     )
     empty_value_display = '-empty-'
