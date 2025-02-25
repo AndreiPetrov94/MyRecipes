@@ -12,7 +12,7 @@ const Technologies = () => {
     </MetaTags>
     
     <Container>
-      <h1 className={styles.title}>Технологии</h1>
+    <h1 className={styles.title}>Технологии</h1>
       <div className={styles.content}>
         <div>
           <h2 className={styles.subtitle}>Технологии, которые применены в этом проекте:</h2>
@@ -29,6 +29,27 @@ const Technologies = () => {
               </li>
               <li className={styles.textItem}>
                 Djoser
+              </li>
+              <li className={styles.textItem}>
+                Gunicorn
+              </li>
+              <li className={styles.textItem}>
+                Nginx
+              </li>
+              <li className={styles.textItem}>
+                Docker
+              </li>
+              <li className={styles.textItem}>
+                GitHub Actions
+              </li>
+              <li className={styles.textItem}>
+                PostgreSQL
+              </li>
+              <li className={styles.textItem}>
+                SQLite
+              </li>
+              <li className={styles.textItem}>
+                Yandex Coud
               </li>
             </ul>
           </div>
