@@ -1,33 +1,48 @@
 from django.contrib import admin
 
 from foodgram.constants import INLINE_EXTRA_VALUE
-from recipes.models import Ingredient, Recipe, Tag
+from recipes.models import (
+    Favorite,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    ShoppingCart,
+    Tag
+)
 
 
 class RecipeIngredientsInLine(admin.TabularInline):
     """Управление ингредиентами рецепта."""
 
-    model = Recipe.ingredients.through
+    model = RecipeIngredient
     extra = INLINE_EXTRA_VALUE
 
 
-class RecipeTagsInLine(admin.TabularInline):
-    """Управление тегами рецепта."""
+class ShoppingCartInline(admin.StackedInline):
+    """Управление списком покупок."""
 
-    model = Recipe.tags.through
-    extra = INLINE_EXTRA_VALUE
+    model = ShoppingCart
+
+
+class FavoriteInline(admin.StackedInline):
+    """Управление избранными рецептами."""
+    model = Favorite
 
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     """Управление ингредиентами."""
 
+    inlines = (
+        RecipeIngredientsInLine,
+    )
     list_display = (
         'id',
         'name',
         'measurement_unit'
     )
     search_fields = ('name',)
+    list_display_links = ('name',)
     empty_value_display = '-empty-'
 
 
@@ -47,14 +62,42 @@ class TagAdmin(admin.ModelAdmin):
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     """Управление рецептами."""
+    inlines = (
+        FavoriteInline,
+        RecipeIngredientsInLine,
+        ShoppingCartInline
+    )
 
     list_display = (
-        'id',
         'name',
-        'text',
-        'author'
+        'author',
+        'in_favorite'
     )
-    search_fields = ('name', 'author')
-    inlines = (RecipeIngredientsInLine, RecipeTagsInLine)
     list_display_links = ('name',)
-    empty_value_display = '-empty-'
+    fields = (
+        'name',
+        'author',
+        'text',
+        'tags'
+    )
+    search_fields = (
+        'name',
+        'author__username'
+    )
+    list_filter = ('tags',)
+
+    @admin.display(description='Добавлено в избранное')
+    def in_favorite(self, obj):
+        return f'{obj.favorites.count()} пользоват.'
+
+
+@admin.register(ShoppingCart)
+class ShoppingCartAdmin(admin.ModelAdmin):
+    """Управление списком покупок."""
+    pass
+
+
+@admin.register(Favorite)
+class FavoriteAdmin(admin.ModelAdmin):
+    """Управление избранными рецептами."""
+    pass
