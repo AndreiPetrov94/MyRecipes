@@ -30,3 +30,5 @@ jobs:
     - name: Test with flake8
       run: |
         python -m flake8 backend/
+
+#настройка fkake8_6 этап
