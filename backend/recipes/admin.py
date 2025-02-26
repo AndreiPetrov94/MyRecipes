@@ -1,14 +1,8 @@
 from django.contrib import admin
 
+from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                            ShoppingCart, Tag)
 from foodgram.constants import INLINE_EXTRA_VALUE
-from recipes.models import (
-    Favorite,
-    Ingredient,
-    Recipe,
-    RecipeIngredient,
-    ShoppingCart,
-    Tag
-)
 
 
 class RecipeIngredientsInLine(admin.TabularInline):

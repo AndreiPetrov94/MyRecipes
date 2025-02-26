@@ -3,14 +3,8 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from api.utils import Base64ImageField, check_user_status
-from recipes.models import (
-    Favorite,
-    Ingredient,
-    Recipe,
-    RecipeIngredient,
-    ShoppingCart,
-    Tag
-)
+from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                            ShoppingCart, Tag)
 from users.models import Subscription, User
 from users.validators import validation_password_length, validation_username
 

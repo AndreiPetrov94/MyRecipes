@@ -1,43 +1,28 @@
 from django.shortcuts import redirect
-from djoser.views import UserViewSet
-from django.views.decorators.http import require_GET
 from django.urls import reverse
+from django.views.decorators.http import require_GET
 from django_filters.rest_framework import DjangoFilterBackend
+from djoser.views import UserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import (
-    AllowAny,
-    IsAuthenticated,
-    IsAuthenticatedOrReadOnly
-)
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 
 from api.filters import IngredientFilter, RecipeFilter
 from api.permissions import IsAuthorOrReadOnly
-from api.serializers import (
-    AvatarSerializer,
-    CustomUserSerializer,
-    FavoriteRecipeSerializer,
-    IngredientSerializer,
-    RecipeCreateUpdateSerializer,
-    RecipeGetSerializer,
-    ShoppingCartSerializer,
-    SubscriptionDetailSerializer,
-    SubscriptionSerializer,
-    TagSerializer
-)
+from api.serializers import (AvatarSerializer, CustomUserSerializer,
+                             FavoriteRecipeSerializer, IngredientSerializer,
+                             RecipeCreateUpdateSerializer, RecipeGetSerializer,
+                             ShoppingCartSerializer,
+                             SubscriptionDetailSerializer,
+                             SubscriptionSerializer, TagSerializer)
 from api.utils import check_recipe_action, get_shopping_cart
-from recipes.models import (
-    Favorite,
-    Ingredient,
-    Recipe,
-    ShoppingCart,
-    Tag
-)
-from users.models import User, Subscription
+from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
+from users.models import Subscription, User
 
 
 class CustomUserViewSet(UserViewSet):

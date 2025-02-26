@@ -1,15 +1,10 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from foodgram.constants import (
-    MAX_LENGTH_EMAILFIELD,
-    MAX_LENGTH_CHARFIELD_NAME,
-    MAX_LENGTH_CHARFIELD_PASSWORD
-)
-from users.validators import (
-    validation_password_length,
-    validation_username
-)
+from foodgram.constants import (MAX_LENGTH_CHARFIELD_NAME,
+                                MAX_LENGTH_CHARFIELD_PASSWORD,
+                                MAX_LENGTH_EMAILFIELD)
+from users.validators import validation_password_length, validation_username
 
 
 class User(AbstractUser):
