@@ -11,10 +11,6 @@ SECRET_KEY = os.getenv('SECRET_KEY', default='token')
 
 DEBUG = os.getenv('DEBUG') == 'False'
 
-
-#ALLOWED_HOSTS = ['84.201.141.69', '127.0.0.1', 'localhost', 'foodgram-ap94.zapto.org']
-
-ALLOWED_HOSTS = ['*']
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='127.0.0.1, localhost').split(', ')
 
 INSTALLED_APPS = [
@@ -62,13 +58,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'foodgram.wsgi.application'
-
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.sqlite3',
-#        'NAME': '/data/db.sqlite3',
-#    }
-#}
 
 DATABASES = {
     'default': {
