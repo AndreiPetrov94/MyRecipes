@@ -136,4 +136,3 @@ jobs:
         to: ${{ secrets.TELEGRAM_TO }}
         token: ${{ secrets.TELEGRAM_TOKEN }}
         message: БУ! Испугался? Деплой Foodgram успешно выполнен!
-
