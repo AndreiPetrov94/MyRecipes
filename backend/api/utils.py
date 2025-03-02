@@ -65,12 +65,12 @@ def check_user_status(request, obj, model):
 def get_shopping_cart(request):
     """Генерирует файл со списком покупок для текущего пользователя."""
     user = request.user
-    if not user.shopping_carts.exists():
+    if not user.shoppingcarts.exists():
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     ingredients = (
         RecipeIngredient.objects.filter(
-            recipe__shopping_carts__user=request.user
+            recipe__shoppingcarts__user=request.user
         ).values(
             'ingredient__name',
             'ingredient__measurement_unit',

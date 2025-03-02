@@ -52,4 +52,4 @@ class RecipeFilter(FilterSet):
         """Фильтрует рецепты, добавленные в список покупок."""
         if not value or not self.request.user.is_authenticated:
             return queryset
-        return queryset.filter(shopping_carts__user=self.request.user)
+        return queryset.filter(shoppingcarts__user=self.request.user)

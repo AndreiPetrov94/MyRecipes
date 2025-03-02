@@ -58,7 +58,7 @@ class User(AbstractUser):
         'last_name')
 
     class Meta:
-        ordering = ['username']
+        ordering = ('username',)
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
@@ -84,7 +84,7 @@ class Subscription(models.Model):
     )
 
     class Meta:
-        ordering = ['author']
+        ordering = ('author',)
         constraints = [
             models.UniqueConstraint(
                 fields=('user', 'author'),

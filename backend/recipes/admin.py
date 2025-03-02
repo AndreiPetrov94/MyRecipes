@@ -1,4 +1,6 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
@@ -37,7 +39,27 @@ class IngredientAdmin(admin.ModelAdmin):
     )
     search_fields = ('name',)
     list_display_links = ('name',)
-    empty_value_display = '-empty-'
+    empty_value_display = '-пусто-'
+
+    def save_model(self, request, obj, form, change):
+        """Реализация ограничения подписки на себя."""
+
+        if obj.name == obj.measurement_unit:
+            self.message_user(
+                request,
+                'Название и единица измерения ингредиента должны быть разные.',
+                level=messages.ERROR
+            )
+            return
+        super().save_model(request, obj, form, change)
+
+    def response_add(self, request, obj, post_url_continue=None):
+        """Перенаправление на форму создания подписки."""
+
+        if obj.name == obj.measurement_unit:
+            url = reverse('admin:recipes_ingredient_add')
+            return HttpResponseRedirect(url)
+        return super().response_add(request, obj, post_url_continue)
 
 
 @admin.register(Tag)
@@ -50,7 +72,7 @@ class TagAdmin(admin.ModelAdmin):
         'slug'
     )
     search_fields = ('name',)
-    empty_value_display = '-empty-'
+    empty_value_display = '-пусто-'
 
 
 @admin.register(Recipe)
@@ -88,10 +110,8 @@ class RecipeAdmin(admin.ModelAdmin):
 @admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):
     """Управление списком покупок."""
-    pass
 
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
     """Управление избранными рецептами."""
-    pass
