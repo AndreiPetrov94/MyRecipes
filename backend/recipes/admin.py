@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin, messages
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -13,6 +14,35 @@ class RecipeIngredientsInLine(admin.TabularInline):
     model = RecipeIngredient
     extra = INLINE_EXTRA_VALUE
 
+    def get_formset(self, request, obj=None, **kwargs):
+        """Формсет для проверки ингредиентов рецепта."""
+        formset = super().get_formset(request, obj, **kwargs)
+
+        def clean(formset_self):
+            """Проверка наличия и уникальности ингредиента в рецепте."""
+            ingredients = []
+            validation_ingredients = False
+
+            for form in formset_self.forms:
+                ingredient = form.cleaned_data.get('ingredient')
+                deletion_ingredients = form.cleaned_data.get('DELETE', False)
+
+                if ingredient and not deletion_ingredients:
+                    validation_ingredients = True
+
+                    if ingredient in ingredients:
+                        raise forms.ValidationError(
+                            f'Ингредиент "{ingredient}" уже добавлен в рецепт.'
+                        )
+                    ingredients.append(ingredient)
+
+            if not validation_ingredients:
+                raise forms.ValidationError(
+                    'Рецепт должен содержать хотя бы один ингредиент.'
+                )
+        formset.clean = clean
+        return formset
+
 
 class ShoppingCartInline(admin.StackedInline):
     """Управление списком покупок."""
@@ -22,6 +52,7 @@ class ShoppingCartInline(admin.StackedInline):
 
 class FavoriteInline(admin.StackedInline):
     """Управление избранными рецептами."""
+
     model = Favorite
 
 
@@ -42,8 +73,7 @@ class IngredientAdmin(admin.ModelAdmin):
     empty_value_display = '-пусто-'
 
     def save_model(self, request, obj, form, change):
-        """Реализация ограничения подписки на себя."""
-
+        """Реализация ограничения создания ингредиента."""
         if obj.name == obj.measurement_unit:
             self.message_user(
                 request,
@@ -53,13 +83,19 @@ class IngredientAdmin(admin.ModelAdmin):
             return
         super().save_model(request, obj, form, change)
 
-    def response_add(self, request, obj, post_url_continue=None):
-        """Перенаправление на форму создания подписки."""
-
+    def response_add(self, request, obj):
+        """Перенаправление на форму создания ингредиента."""
         if obj.name == obj.measurement_unit:
             url = reverse('admin:recipes_ingredient_add')
             return HttpResponseRedirect(url)
-        return super().response_add(request, obj, post_url_continue)
+        return super().response_add(request, obj)
+
+    def response_change(self, request, obj):
+        """Перенаправление на форму изменения ингредиента."""
+        if obj.name == obj.measurement_unit:
+            url = reverse('admin:recipes_ingredient_change', args=[obj.id])
+            return HttpResponseRedirect(url)
+        return super().response_change(request, obj)
 
 
 @admin.register(Tag)
@@ -78,9 +114,10 @@ class TagAdmin(admin.ModelAdmin):
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     """Управление рецептами."""
+
     inlines = (
-        FavoriteInline,
         RecipeIngredientsInLine,
+        FavoriteInline,
         ShoppingCartInline
     )
 
@@ -94,7 +131,8 @@ class RecipeAdmin(admin.ModelAdmin):
         'name',
         'author',
         'text',
-        'tags'
+        'tags',
+        'cooking_time'
     )
     search_fields = (
         'name',
@@ -104,6 +142,7 @@ class RecipeAdmin(admin.ModelAdmin):
 
     @admin.display(description='Добавлено в избранное')
     def in_favorite(self, obj):
+        """Отображение кол-ва пользователей, добавивших рецепт в избранное."""
         return f'{obj.favorites.count()} пользоват.'
 
 

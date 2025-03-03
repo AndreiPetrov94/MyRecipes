@@ -44,7 +44,6 @@ class SubscriptionAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         """Реализация ограничения подписки на себя."""
-
         if obj.user == obj.author:
             self.message_user(
                 request,
@@ -54,10 +53,16 @@ class SubscriptionAdmin(admin.ModelAdmin):
             return
         super().save_model(request, obj, form, change)
 
-    def response_add(self, request, obj, post_url_continue=None):
+    def response_add(self, request, obj):
         """Перенаправление на форму создания подписки."""
-
         if obj.user == obj.author:
             url = reverse('admin:users_subscription_add')
             return HttpResponseRedirect(url)
-        return super().response_add(request, obj, post_url_continue)
+        return super().response_add(request, obj)
+
+    def response_change(self, request, obj):
+        """Перенаправление на форму изменения подписки."""
+        if obj.user == obj.author:
+            url = reverse('admin:users_subscription_change', args=[obj.id])
+            return HttpResponseRedirect(url)
+        return super().response_change(request, obj)
