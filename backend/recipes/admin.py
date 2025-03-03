@@ -93,7 +93,10 @@ class IngredientAdmin(admin.ModelAdmin):
     def response_change(self, request, obj):
         """Перенаправление на форму изменения ингредиента."""
         if obj.name == obj.measurement_unit:
-            url = reverse('admin:recipes_ingredient_change', args=[obj.id])
+            url = reverse(
+                'admin:recipes_ingredient_change',
+                args=[obj.id]
+            )
             return HttpResponseRedirect(url)
         return super().response_change(request, obj)
 

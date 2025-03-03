@@ -2,7 +2,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.decorators.http import require_GET
 from django_filters.rest_framework import DjangoFilterBackend
-from djoser.views import UserViewSet
+from djoser.views import UserViewSet as UV
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -14,22 +14,23 @@ from rest_framework.response import Response
 
 from api.filters import IngredientFilter, RecipeFilter
 from api.permissions import IsAuthorOrReadOnly
-from api.serializers import (AvatarSerializer, CustomUserSerializer,
-                             FavoriteRecipeSerializer, IngredientSerializer,
-                             RecipeCreateUpdateSerializer, RecipeGetSerializer,
-                             ShoppingCartSerializer,
+from api.serializers import (AvatarSerializer, FavoriteRecipeSerializer,
+                             IngredientSerializer,
+                             RecipeCreateUpdateSerializer,
+                             RecipeGetSerializer, ShoppingCartSerializer,
                              SubscriptionDetailSerializer,
-                             SubscriptionSerializer, TagSerializer)
+                             SubscriptionSerializer, TagSerializer,
+                             UserGetSerializer)
 from api.utils import check_recipe_action, get_shopping_cart
 from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from users.models import Subscription, User
 
 
-class CustomUserViewSet(UserViewSet):
+class UserViewSet(UV):
     """Вьюсет для управления пользователями и подписками."""
 
     queryset = User.objects.all()
-    serializer_class = CustomUserSerializer
+    serializer_class = UserGetSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
     pagination_class = LimitOffsetPagination
 

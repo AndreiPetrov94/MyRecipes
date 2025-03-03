@@ -63,6 +63,9 @@ class SubscriptionAdmin(admin.ModelAdmin):
     def response_change(self, request, obj):
         """Перенаправление на форму изменения подписки."""
         if obj.user == obj.author:
-            url = reverse('admin:users_subscription_change', args=[obj.id])
+            url = reverse(
+                'admin:users_subscription_change',
+                args=[obj.id]
+            )
             return HttpResponseRedirect(url)
         return super().response_change(request, obj)
