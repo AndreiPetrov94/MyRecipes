@@ -18,7 +18,7 @@ from api.serializers import (AvatarSerializer, FavoriteRecipeSerializer,
                              SubscriptionDetailSerializer,
                              SubscriptionSerializer, TagSerializer,
                              UserGetSerializer)
-from api.utils import check_recipe_action, get_shopping_cart
+from api.utils import get_shopping_cart
 from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from users.models import Subscription, User
 
@@ -177,6 +177,45 @@ class RecipeViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK
         )
 
+    def check_recipe_action(self, request, model, recipe, serializer_class):
+        """Обработка действий с рецептом (добавление/удаление)."""
+        user = request.user
+        queryset = model.objects.select_related(
+            'user',
+            'recipe'
+        ).filter(user=user, recipe=recipe)
+
+        if request.method == 'POST':
+            if queryset.exists():
+                return Response(
+                    {'detail': f'Рецепт уже есть в {model.__name__.lower()}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            data = {
+                'user': user.id,
+                'recipe': recipe.id
+            }
+            serializer = serializer_class(
+                data=data,
+                context={'request': request}
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+
+        elif request.method == 'DELETE':
+            if not queryset.exists():
+                return Response(
+                    {'detail': f'Рецепт не найден в {model.__name__.lower()}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            queryset.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(
         detail=True,
         methods=['POST', 'DELETE'],
@@ -185,7 +224,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def favorite(self, request, pk=None):
         """Добавление/удаление рецепта из избранного."""
         recipe = self.get_object()
-        return check_recipe_action(
+        return self.check_recipe_action(
             request,
             Favorite,
             recipe,
@@ -200,7 +239,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def shopping_cart(self, request, pk=None):
         """Добавление/удаление рецепта из списка покупок."""
         recipe = self.get_object()
-        return check_recipe_action(
+        return self.check_recipe_action(
             request,
             ShoppingCart,
             recipe,

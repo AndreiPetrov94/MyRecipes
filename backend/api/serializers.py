@@ -402,11 +402,7 @@ class AbstractAuthorRecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         abstract = True
-        fields = (
-            'author',
-            'recipe'
-        )
-        read_only_fields = ('author',)
+        fields = '__all__'
 
     def validate(self, attrs):
         """Проверяет, не добавлен ли рецепт уже в указанное место."""

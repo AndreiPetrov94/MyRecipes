@@ -29,30 +29,6 @@ class Base64ImageField(ImageField):
         return super().to_internal_value(data)
 
 
-def check_recipe_action(request, model, recipe, serializer_class):
-    """Обработка действий с рецептом (добавление/удаление)."""
-    user = request.user
-    if request.method == 'POST':
-        if model.objects.filter(user=user, recipe=recipe).exists():
-            return Response(
-                {'detail': f'Рецепт уже добавлен в {model.__name__.lower()}'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        model.objects.create(user=user, recipe=recipe)
-        return Response(
-            serializer_class(recipe, context={'request': request}).data,
-            status=status.HTTP_201_CREATED
-        )
-    elif request.method == 'DELETE':
-        if not model.objects.filter(user=user, recipe=recipe).exists():
-            return Response(
-                {'detail': f'Рецепт не найден в {model.__name__.lower()}'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        model.objects.filter(user=user, recipe=recipe).delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
 def check_user_status(request, obj, model):
     """Проверяет наличие объекта в списке пользователя."""
     return (
