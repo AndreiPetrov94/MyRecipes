@@ -92,28 +92,32 @@ class UserViewSet(UV):
         """Добавление/удаление подписки на автора."""
         user = request.user
         author = get_object_or_404(User, id=id)
-        if user == author:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+
         if self.request.method == 'POST':
             if Subscription.objects.filter(user=user, author=author).exists():
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-            queryset = Subscription.objects.create(author=author, user=user)
             serializer = SubscriptionSerializer(
-                queryset,
+                data={'user': user.id, 'author': author.id},
                 context={'request': request}
             )
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        elif self.request.method == 'DELETE':
-            if not Subscription.objects.filter(
-                    user=user,
-                    author=author
-            ).exists():
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-            Subscription.objects.filter(
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            subscription_detail_serializer = SubscriptionDetailSerializer(
+                author,
+                context={'request': request}
+            )
+            return Response(subscription_detail_serializer.data, status=status.HTTP_201_CREATED)
+
+        if not Subscription.objects.filter(
                 user=user,
                 author=author
-            ).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        ).exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        Subscription.objects.filter(
+            user=user,
+            author=author
+        ).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
