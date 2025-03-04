@@ -8,7 +8,6 @@ from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
 from users.models import Subscription, User
 from users.validators import validation_password_length, validation_username
 
-from rest_framework import status
 
 class UserCreateSerializer(UserCreateSerializer):
     """Сериализатор создания пользователя."""
@@ -286,12 +285,10 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
 
     ingredients = IngredientPostSerializer(
         many=True,
-        required=True,
         source='recipe_ingredients',
     )
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
-        required=True,
         queryset=Tag.objects.all(),
     )
     image = Base64ImageField()
@@ -307,40 +304,44 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
             'cooking_time'
         )
 
+# Переместил validate_tags и validate_ingredients в validate,
+# чтобы вся валидация была в одном месте. Так же исключить, повторную
+# проверку при обновление рецепта на отсутствующие поля тег и ингредиент
+# возникает исключение (KeyError)
+
     def validate(self, data):
         """Валидация входных данных для создания/обновления рецепта."""
-        if not data.get('recipe_ingredients'):
-            raise serializers.ValidationError(
-                {'ingredients': 'Это поле обязательно!'}
-            )
-        if not data.get('tags'):
+        request = self.context.get('request')
+        ingredients = data.get('recipe_ingredients')
+        tags = data.get('tags')
+        name = data.get('name')
+
+        if not tags:
             raise serializers.ValidationError(
                 {'tags': 'Это поле обязательно!'}
             )
-        if self.context['request'].method == 'POST':
-            name = data.get('name')
+        if len(tags) != len(set(tags)):
+            raise serializers.ValidationError(
+                {'tags': 'Теги должны быть уникальными!'}
+            )
+        if not ingredients:
+            raise serializers.ValidationError(
+                {'ingredients': 'Это поле обязательно!'}
+            )
+        ingredient_ids = []
+        for ingredient in ingredients:
+            if ingredient.get('id'):
+                ingredient_ids.append(ingredient.get('id'))
+        if len(ingredient_ids) != len(set(ingredient_ids)):
+            raise serializers.ValidationError(
+                {'ingredients': 'Нельзя добавлять ингредиент несколько раз!'}
+            )
+        if request.method == 'POST':
             if Recipe.objects.filter(name=name).exists():
                 raise serializers.ValidationError(
                     {'name': 'Такой рецепт уже существует!'}
                 )
         return data
-
-    def validate_tags(self, value):
-        """Проверяет валидность тегов."""
-        if len(value) != len(set(value)):
-            raise serializers.ValidationError(
-                'Тег должен быть уникальным!'
-            )
-        return value
-
-    def validate_ingredients(self, value):
-        """Проверяет валидность ингредиентов."""
-        ingredient_ids = [ingredient['id'] for ingredient in value]
-        if len(ingredient_ids) != len(set(ingredient_ids)):
-            raise serializers.ValidationError(
-                'Нельзя добавлять один и тот же ингредиент несколько раз!'
-            )
-        return value
 
     def create_ingredients(self, ingredients, recipe):
         """Создает связи между рецептом и ингредиентами."""

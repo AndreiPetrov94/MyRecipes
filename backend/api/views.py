@@ -1,11 +1,8 @@
-from django.shortcuts import redirect
-from django.urls import reverse
-from django.views.decorators.http import require_GET
 from django_filters.rest_framework import DjangoFilterBackend
+from django.urls import reverse
 from djoser.views import UserViewSet as UV
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import (AllowAny, IsAuthenticated,
@@ -220,13 +217,3 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         """Скачивание списка покупок."""
         return get_shopping_cart(request)
-
-
-@require_GET
-def get_short_link(request, pk):
-    """Переадресация на страницу рецепта."""
-    try:
-        Recipe.objects.get(pk=pk)
-        return redirect(f'/recipes/{pk}/')
-    except Exception:
-        raise ValidationError(f'Рецепт с ID "{pk}" не найден.')
