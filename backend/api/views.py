@@ -102,11 +102,14 @@ class UserViewSet(UV):
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            subscription_detail_serializer = SubscriptionDetailSerializer(
+            serializer_detail = SubscriptionDetailSerializer(
                 author,
                 context={'request': request}
             )
-            return Response(subscription_detail_serializer.data, status=status.HTTP_201_CREATED)
+            return Response(
+                serializer_detail.data,
+                status=status.HTTP_201_CREATED
+            )
 
         if not Subscription.objects.filter(
                 user=user,
