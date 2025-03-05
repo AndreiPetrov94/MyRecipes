@@ -29,15 +29,6 @@ class Base64ImageField(ImageField):
         return super().to_internal_value(data)
 
 
-def check_user_status(request, obj, model):
-    """Проверяет наличие объекта в списке пользователя."""
-    return (
-        request
-        and request.user.is_authenticated
-        and model.objects.filter(user=request.user, recipe=obj).exists()
-    )
-
-
 def get_shopping_cart(request):
     """Генерирует файл со списком покупок для текущего пользователя."""
     user = request.user
