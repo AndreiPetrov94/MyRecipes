@@ -149,11 +149,66 @@ class RecipeAdmin(admin.ModelAdmin):
         return f'{obj.favorites.count()} пользоват.'
 
 
-@admin.register(ShoppingCart)
-class ShoppingCartAdmin(admin.ModelAdmin):
-    """Управление списком покупок."""
+class AuthorRecipeAdminMixin:
+    """Миксин ограничения повторяющихся рецептов."""
+
+    list_display = (
+        'id',
+        'user',
+        'recipe'
+    )
+    search_fields = (
+        'user__username',
+        'recipe__name'
+    )
+    list_filter = ('user',)
+    empty_value_display = '-пусто-'
+
+    def check_recipe(self, obj):
+        """Проверка рецепта."""
+        return self.model.objects.filter(
+            user=obj.user,
+            recipe=obj.recipe
+        ).exists()
+
+    def save_model(self, request, obj, form, change):
+        """Проверка наличия рецепта в списке."""
+        if self.check_recipe(obj):
+            self.message_user(
+                request,
+                f'Этот рецепт уже добавлен в {self._added_to}.',
+                level=messages.ERROR
+            )
+            return
+        super().save_model(request, obj, form, change)
+
+    def response_add(self, request, obj):
+        """Обработка ошибки при добавлении повторяющегося рецепта."""
+        if self.check_recipe(obj):
+            url = reverse(f'admin:recipes_{self.model.__name__.lower()}_add')
+            return HttpResponseRedirect(url)
+        return super().response_add(request, obj)
+
+    def response_change(self, request, obj):
+        """Обработка ошибки при изменении повторяющегося рецепта."""
+        if self.check_recipe(obj):
+            url = reverse(
+                f'admin:recipes_{self.model.__name__.lower()}_change',
+                args=[obj.id]
+            )
+            return HttpResponseRedirect(url)
+        return super().response_change(request, obj)
 
 
 @admin.register(Favorite)
-class FavoriteAdmin(admin.ModelAdmin):
+class FavoriteAdmin(AuthorRecipeAdminMixin, admin.ModelAdmin):
     """Управление избранными рецептами."""
+
+    _added_to = 'избранное'
+
+
+@admin.register(ShoppingCart)
+class ShoppingCartAdmin(AuthorRecipeAdminMixin, admin.ModelAdmin):
+    """Управление списком покупок."""
+
+    _added_to = 'список покупок'

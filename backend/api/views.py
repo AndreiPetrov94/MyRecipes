@@ -1,3 +1,4 @@
+from django.db.models import Exists, OuterRef, Value
 from django_filters.rest_framework import DjangoFilterBackend
 from django.urls import reverse
 from djoser.views import UserViewSet as UV
@@ -158,6 +159,33 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeGetSerializer
         return RecipeCreateUpdateSerializer
 
+    def get_queryset(self):
+        """Переопределение ."""
+        user = self.request.user
+        queryset = super().get_queryset()
+
+        if user.is_authenticated:
+            queryset = queryset.annotate(
+                is_favorited=Exists(
+                    Favorite.objects.filter(
+                        user=user,
+                        recipe=OuterRef('id')
+                    ).values('recipe')
+                ),
+                is_in_shopping_cart=Exists(
+                    ShoppingCart.objects.filter(
+                        user=user,
+                        recipe=OuterRef('id')
+                    ).values('recipe')
+                )
+            )
+        else:
+            queryset = queryset.annotate(
+                is_in_shopping_cart=Value(False),
+                is_favorited=Value(False)
+            )
+        return queryset
+
     @action(
         detail=True,
         methods=['GET'],
@@ -207,14 +235,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_201_CREATED
             )
 
-        elif request.method == 'DELETE':
-            if not queryset.exists():
-                return Response(
-                    {'detail': f'Рецепт не найден в {model.__name__.lower()}'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            queryset.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        if not queryset.exists():
+            return Response(
+                {'detail': f'Рецепт не найден в {model.__name__.lower()}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        queryset.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=True,

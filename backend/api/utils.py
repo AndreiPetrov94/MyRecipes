@@ -47,7 +47,7 @@ def get_shopping_cart(request):
     ingredients = (
         RecipeIngredient.objects.filter(
             recipe__shoppingcarts__user=request.user
-        ).values(
+        ).select_related('ingredient').values(
             'ingredient__name',
             'ingredient__measurement_unit',
         ).annotate(

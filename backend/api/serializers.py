@@ -233,8 +233,8 @@ class RecipeGetSerializer(serializers.ModelSerializer):
         read_only=True
     )
     image = Base64ImageField(required=False)
-    is_favorited = serializers.SerializerMethodField()
-    is_in_shopping_cart = serializers.SerializerMethodField()
+    is_favorited = serializers.BooleanField(default=False)
+    is_in_shopping_cart = serializers.BooleanField(default=False)
 
     class Meta:
         model = Recipe
@@ -261,22 +261,6 @@ class RecipeGetSerializer(serializers.ModelSerializer):
             'cooking_time',
             'is_favorited',
             'is_in_shopping_cart'
-        )
-
-    def get_is_favorited(self, obj):
-        """Проверяет наличие рецепта в избранном."""
-        return check_user_status(
-            self.context.get('request'),
-            obj,
-            Favorite
-        )
-
-    def get_is_in_shopping_cart(self, obj):
-        """Проверяет наличие рецепта в списке покупок."""
-        return check_user_status(
-            self.context.get('request'),
-            obj,
-            ShoppingCart
         )
 
 
@@ -395,7 +379,7 @@ class RecipeShortSerializer(serializers.ModelSerializer):
         )
 
 
-class AbstractAuthorRecipeSerializer(serializers.ModelSerializer):
+class BaseAuthorRecipeSerializer(serializers.ModelSerializer):
     """Абстрактный сериализатор для избранного и списка покупок."""
 
     _added_to: str = ''
@@ -425,19 +409,19 @@ class AbstractAuthorRecipeSerializer(serializers.ModelSerializer):
         ).data
 
 
-class FavoriteRecipeSerializer(AbstractAuthorRecipeSerializer):
+class FavoriteRecipeSerializer(BaseAuthorRecipeSerializer):
     """Сериализатор избранных рецептов."""
 
     _added_to = 'избранное'
 
-    class Meta(AbstractAuthorRecipeSerializer.Meta):
+    class Meta(BaseAuthorRecipeSerializer.Meta):
         model = Favorite
 
 
-class ShoppingCartSerializer(AbstractAuthorRecipeSerializer):
+class ShoppingCartSerializer(BaseAuthorRecipeSerializer):
     """Сериализатор списка покупок."""
 
     _added_to = 'список покупок'
 
-    class Meta(AbstractAuthorRecipeSerializer.Meta):
+    class Meta(BaseAuthorRecipeSerializer.Meta):
         model = ShoppingCart
