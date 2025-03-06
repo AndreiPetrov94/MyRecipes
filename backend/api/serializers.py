@@ -3,6 +3,9 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from api.utils import Base64ImageField
+from foodgram.constants import (MAX_VALUE_COOKING_TIME,
+                                MIN_VALUE_COOKING_TIME,
+                                MIN_VALUE_INGREDIENT_AMOUNT)
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
 from users.models import Subscription, User
@@ -54,9 +57,9 @@ class UserGetSerializer(UserSerializer):
         """Проверяет подписку текущего пользователя."""
         request = self.context.get('request')
         return (
-            request is not None
-            and (not request.user.is_anonymous)
-            and (request.user.follower.filter(author=obj).exists())
+            request
+            and not request.user.is_anonymous
+            and request.user.follower.filter(author=obj).exists()
         )
 
 
@@ -111,28 +114,12 @@ class SubscriptionDetailSerializer(UserGetSerializer):
 
     class Meta:
         model = User
-        fields = (
-            'id',
-            'email',
-            'username',
-            'first_name',
-            'last_name',
-            'avatar',
-            'is_subscribed',
+
+        fields = UserGetSerializer.Meta.fields + (
             'recipes',
             'recipes_count'
         )
-        read_only_fields = (
-            'id',
-            'email',
-            'username',
-            'first_name',
-            'last_name',
-            'avatar',
-            'is_subscribed',
-            'recipes',
-            'recipes_count'
-        )
+        read_only_fields = fields
 
     def get_recipes(self, obj):
         """Возвращает список рецептов автора."""
@@ -198,6 +185,14 @@ class IngredientPostSerializer(serializers.ModelSerializer):
             'id',
             'amount'
         )
+
+    def validate_amount(self, value):
+        """Валидация минимального количества ингредиента."""
+        if value < MIN_VALUE_INGREDIENT_AMOUNT:
+            raise serializers.ValidationError(
+                'Количество ингредиента не может быть меньше 1'
+            )
+        return value
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
@@ -288,14 +283,10 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
             'cooking_time'
         )
 
-# Переместил validate_tags и validate_ingredients в validate,
-# чтобы вся валидация была в одном месте. Так же исключить, повторную
-# проверку при обновление рецепта на отсутствующие поля тег и ингредиент
-# возникает исключение (KeyError)
-
     def validate(self, data):
         """Валидация входных данных для создания/обновления рецепта."""
         request = self.context.get('request')
+        cooking_time = data.get('cooking_time')
         ingredients = data.get('recipe_ingredients')
         tags = data.get('tags')
         name = data.get('name')
@@ -325,6 +316,20 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {'name': 'Такой рецепт уже существует!'}
                 )
+        if not cooking_time:
+            raise serializers.ValidationError(
+                {'cooking_time': 'Это поле обязательно!'}
+            )
+        if cooking_time < MIN_VALUE_COOKING_TIME:
+            raise serializers.ValidationError(
+                {'cooking_time':
+                 'Время приготовления не может быть меньше 1 минуты.'}
+            )
+        if cooking_time > MAX_VALUE_COOKING_TIME:
+            raise serializers.ValidationError(
+                {'cooking_time':
+                 'Время приготовления не может быть меньше 10 080 минут.'}
+            )
         return data
 
     def create_ingredients(self, ingredients, recipe):

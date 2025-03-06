@@ -95,8 +95,6 @@ class UserViewSet(UV):
         author = get_object_or_404(User, id=id)
 
         if self.request.method == 'POST':
-            if Subscription.objects.filter(user=user, author=author).exists():
-                return Response(status=status.HTTP_400_BAD_REQUEST)
             serializer = SubscriptionSerializer(
                 data={'user': user.id, 'author': author.id},
                 context={'request': request}
@@ -112,15 +110,15 @@ class UserViewSet(UV):
                 status=status.HTTP_201_CREATED
             )
 
-        if not Subscription.objects.filter(
-                user=user,
-                author=author
-        ).exists():
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        Subscription.objects.filter(
+        subscription = Subscription.objects.filter(
             user=user,
             author=author
-        ).delete()
+        )
+        if not subscription.exists():
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -148,7 +146,6 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с рецептами."""
 
-    queryset = Recipe.objects.all()
     permission_classes = (IsAuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
@@ -162,7 +159,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Переопределение ."""
         user = self.request.user
-        queryset = super().get_queryset()
+        queryset = Recipe.objects.all()
 
         if user.is_authenticated:
             queryset = queryset.annotate(
