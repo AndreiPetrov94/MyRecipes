@@ -75,7 +75,13 @@ class UserViewSet(UV):
     def subscriptions(self, request):
         """Получение списка подписок текущего пользователя."""
         user = request.user
-        queryset = User.objects.filter(following__user=user)
+        queryset = User.objects.filter(
+            following__user=user
+        ).prefetch_related(
+            'recipes',
+            'recipes__tags',
+            'recipes__ingredients'
+        )
         pages = self.paginate_queryset(queryset)
         serializer = SubscriptionDetailSerializer(
             pages,
@@ -159,7 +165,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Переопределение ."""
         user = self.request.user
-        queryset = Recipe.objects.all()
+        queryset = Recipe.objects.select_related(
+            'author'
+        ).prefetch_related(
+            'tags',
+            'ingredients'
+        )
 
         if user.is_authenticated:
             queryset = queryset.annotate(
@@ -211,11 +222,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ).filter(user=user, recipe=recipe)
 
         if request.method == 'POST':
-            if queryset.exists():
-                return Response(
-                    {'detail': f'Рецепт уже есть в {model.__name__.lower()}'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
             data = {
                 'user': user.id,
                 'recipe': recipe.id
