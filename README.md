@@ -124,7 +124,7 @@ server {
     
     location / {
         proxy_set_header HOST $host;
-        proxy_pass http://127.0.0.1:7000;
+        proxy_pass http://127.0.0.1:8000;
     }
 }
 ```
