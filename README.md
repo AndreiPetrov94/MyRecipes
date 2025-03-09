@@ -1,8 +1,8 @@
 # Дипломный проект Foodgram
-Дипломная работа на курсе Яндекс.Практикум «Фудграм» — сайт, на котором пользователи будут публиковать свои рецепты, добавлять чужие рецепты в избранное и подписываться на публикации других авторов. Зарегистрированным пользователям также будет доступен сервис «Список покупок». Он позволит создавать список продуктов, которые нужно купить для приготовления выбранных блюд. Проект доступен по электронному адресу: 
-[foodgram-ap94.zapto.org](https://foodgram-ap94.zapto.org/).
+Дипломная работа на курсе Яндекс.Практикум «Фудграм» — сайт, на котором пользователи будут публиковать свои рецепты, добавлять чужие рецепты в избранное и подписываться на публикации других авторов. Зарегистрированным пользователям также будет доступен сервис «Список покупок». Он позволит создавать список продуктов, которые нужно купить для приготовления выбранных блюд. 
+### Проект доступен по электронному адресу: [foodgram-ap94.zapto.org](https://foodgram-ap94.zapto.org/).
 
-[![Main Kittygram workflow](https://github.com/AndreiPetrov94/foodgram/actions/workflows/main.yml/badge.svg)](https://github.com/AndreiPetrov94/foodgram/actions/workflows/main.yml)
+### [![Main Foodgram workflow](https://github.com/AndreiPetrov94/foodgram/actions/workflows/main.yml/badge.svg)](https://github.com/AndreiPetrov94/foodgram/actions/workflows/main.yml)
 
 ## Стек использованных технологий
 * Python
@@ -119,11 +119,10 @@ sudo nano /etc/nginx/sites-enabled/default
 ```
 ```
 server {
-    listen 80;
     <server_name>;
     
     location / {
-        proxy_set_header HOST $host;
+        proxy_set_header Host $http_host;
         proxy_pass http://127.0.0.1:8000;
     }
 }
